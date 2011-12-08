@@ -12,7 +12,6 @@ Rainman.load_driver  'my_driver'
 # Load a driver with a specific handler
 Rainman.load_driver  'other/something'
 
-
 module Domain
   extend Rainman::Driver
 
