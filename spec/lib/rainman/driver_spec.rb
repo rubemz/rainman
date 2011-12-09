@@ -29,12 +29,12 @@ describe Rainman::Driver do
     end
 
     it "should raise an error for an unknow Handler" do
-      expect do
+      expect {
         module Mod2
           extend Rainman::Driver
           register_handler(:what)
         end
-      end.to raise_error("Unknown handler 'Mod2::What'")
+      }.to raise_error("Unknown handler 'Mod2::What'")
     end
 
     it "should yield a config" do
