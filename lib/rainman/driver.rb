@@ -1,7 +1,5 @@
 module Rainman
   module Driver
-    extend self
-
     def register_handler(name, &block)
       name  = name.to_s
       klass = "#{self.name}::#{name.to_s.camelize}"
