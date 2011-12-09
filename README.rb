@@ -61,6 +61,16 @@ end
 
 module Domain
   class Enom
+    include Rainman::Handler
+    attr_reader
+
+    def initialize
+      @config =
+    end
+
+    def register(opts = {})
+
+    end
   end
 end
 
