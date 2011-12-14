@@ -15,6 +15,9 @@ describe Rainman::Driver do
       register_handler(:uhoh) do |config|
         config[:hot] = true
       end
+
+      define_action :my_method do
+      end
     end
 
 
@@ -41,5 +44,42 @@ describe Rainman::Driver do
       Mod1::Vern.config.should eql({})
       Mod1::Uhoh.config.should eql({ :hot => true})
     end
+
+    it "should keep track of it's handlers" do
+      Mod1::handlers.should include(:vern, :uhoh)
+    end
   end
+
+  describe "#define_action" do
+    it "should define a method" do
+      Mod1.should respond_to(:my_method)
+    end
+  end
+
+  describe "#add_handler" do
+    before(:each) do
+      module Mod3
+        extend Rainman::Driver
+        class Blah
+        end
+      end
+
+      Mod3::instance_variable_set('@handlers', [])
+    end
+
+    it "should add a handler" do
+      Mod3::handlers.should be_empty
+      Mod3.send(:add_handler, :blah)
+      Mod3::handlers.should include(:blah)
+    end
+
+    it "should raise an error on duplicate handlers" do
+      Mod3::handlers.should be_empty
+      Mod3.send(:add_handler, :blah)
+      expect {
+        Mod3.send(:add_handler, :blah)
+      }.to raise_error("Handler already registered 'Mod3::Blah'")
+    end
+  end
+
 end
