@@ -1,5 +1,3 @@
-require 'forwardable'
-
 module Rainman
   module Driver
     # Array of known handlers
@@ -74,9 +72,7 @@ module Rainman
       klass
     end
 
-    def setup(object)
-      object.extend(Forwardable)
-      object.def_delegators self, *actions
+    def setup(opts = {})
     end
 
   private

@@ -208,14 +208,41 @@ describe Rainman::Driver do
     end
   end
 
-  context "Including a driver" do
+  describe "#setup" do
     class IncludeDriver
-      Mod1::setup self
+      Mod1::setup
     end
 
     subject { IncludeDriver.new }
 
     it { should respond_to(:my_method) }
+
+
+    context "Prefixing" do
+      class IncludeDriverPrefix
+        Mod1::setup :prefix => :something
+      end
+
+      subject { IncludeDriverPrefix.new }
+
+      it { should respond_to(:something) }
+
+      it "should deletegate :something to the driver" do
+        subject.something.with_handler(:vern).my_method.should eql(:vern)
+      end
+    end
+
+    context "Options" do
+      class OptionsDriver
+        Mod1::setup self, :default_handler => :vern
+      end
+
+      subject { OptionsDriver.new }
+
+      it "should use the default_handler" do
+        subject.my_method.should eql(:vern)
+      end
+    end
   end
 
 end
