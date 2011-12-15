@@ -208,4 +208,14 @@ describe Rainman::Driver do
     end
   end
 
+  context "Including a driver" do
+    class IncludeDriver
+      Mod1::setup self
+    end
+
+    subject { IncludeDriver.new }
+
+    it { should respond_to(:my_method) }
+  end
+
 end

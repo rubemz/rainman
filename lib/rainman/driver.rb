@@ -1,3 +1,5 @@
+require 'forwardable'
+
 module Rainman
   module Driver
     # Array of known handlers
@@ -70,6 +72,11 @@ module Rainman
       klass = "#{self.name}::#{name.to_s.camelize}".constantize.new
       yield klass if block_given?
       klass
+    end
+
+    def setup(object)
+      object.extend(Forwardable)
+      object.def_delegators self, *actions
     end
 
   private
