@@ -31,7 +31,7 @@ module Rainman
     # Adds a driver method
     def define_action(name, &block)
       options[name] ||= Option.new(name)
-      actions << name
+      actions << name unless actions.include?(name)
 
       yield options[name] if block_given?
 
