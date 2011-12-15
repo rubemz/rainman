@@ -22,13 +22,13 @@ module Rainman
 
     # Return required args
     def required
-      all.select { |k| all[k][:required] }.keys
+      all.collect { |k,v| k if all[k][:required] }
     end
 
     # Validate options. Raises on error
     def validate!(opts = {})
       if opts.is_a?(Hash)
-        required.each { |arg| raise ":#{arg} is required" unless opts.include?(arg) }
+        required.each { |k,v| raise ":#{k} is required" unless opts.include?(k) }
       else
         raise "opts must be a hash"
       end
