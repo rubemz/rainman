@@ -36,7 +36,7 @@ module Rainman
       yield options[name] if block_given?
 
       (class << self; self; end).class_eval do
-        define_method name do |*args|
+        define_method(name) do |*args|
           options[:global].validate!(*args)
           options[name].validate!(*args)
         end
