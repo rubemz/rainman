@@ -82,4 +82,44 @@ describe Rainman::Driver do
     end
   end
 
+  describe '#options' do
+    subject { Mod1::options }
+    it { should be_a(Hash) }
+    it { should be_empty }
+  end
+
+  describe '#add_option' do
+    module AddOption
+      extend Rainman::Driver
+      define_action(:test) do |m|
+        m.add_option :arg
+        m.add_option :other => { :required => true }
+      end
+    end
+
+    it "should add an :arg option" do
+      hash = {
+        :test    => {
+          :arg   => true,
+          :other => { :required => true }
+        }
+      }
+      AddOption::options.should include(hash)
+    end
+  end
+
+  context "Calling a driver method" do
+    module DriverMethods
+      extend Rainman::Driver
+
+      define_action(:test) do |m|
+        m.add_option :what => { :required => true }
+      end
+    end
+
+    it "should raise an error when :what is not specificed" do
+      expect { DriverMethods::test }.to raise_error(":what is required")
+    end
+  end
+
 end

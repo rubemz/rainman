@@ -5,6 +5,11 @@ module Rainman
       @handlers ||= []
     end
 
+    # Action options
+    def options
+      @options ||= {}
+    end
+
     # Registers a handler with the driver
     def register_handler(name, &block)
       add_handler(name)
@@ -20,10 +25,17 @@ module Rainman
 
     # Adds a driver method
     def define_action(name, &block)
-      instance_eval <<-END
-        def #{name}
+      opts = Option.new(name)
+      if block_given?
+        yield opts
+        options[name] = opts.all unless opts.all.empty?
+      end
+
+      (class << self; self; end).class_eval do
+        define_method name do |*args|
+          opts.validate!(*args)
         end
-      END
+      end
     end
 
   private

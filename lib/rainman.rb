@@ -2,6 +2,7 @@ require "rainman/version"
 require 'active_support/core_ext/string'
 
 module Rainman
+  autoload :Option,  'rainman/option'
   autoload :Driver,  'rainman/driver'
   autoload :Handler, 'rainman/handler'
 
