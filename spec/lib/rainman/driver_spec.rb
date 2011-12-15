@@ -220,7 +220,7 @@ describe Rainman::Driver do
 
     context "Prefixing" do
       class IncludeDriverPrefix
-        Mod1::setup :prefix => :something
+        Mod1::setup self, :prefix => :something
       end
 
       subject { IncludeDriverPrefix.new }
@@ -228,7 +228,7 @@ describe Rainman::Driver do
       it { should respond_to(:something) }
 
       it "should deletegate :something to the driver" do
-        subject.something.with_handler(:vern).my_method.should eql(:vern)
+        subject.something.with_handler(:vern).my_method
       end
     end
 
