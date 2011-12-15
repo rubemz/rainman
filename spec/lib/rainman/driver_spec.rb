@@ -2,13 +2,18 @@ require 'spec_helper'
 
 describe Rainman::Driver do
   describe "#register_handler" do
-
     module Mod1
       extend Rainman::Driver
       class Vern
+        def my_method(opts = {})
+          :vern
+        end
       end
 
       class Uhoh
+        def my_method(opts = {})
+          :uhoh
+        end
       end
 
       register_handler(:vern)
@@ -19,7 +24,6 @@ describe Rainman::Driver do
       define_action :my_method do
       end
     end
-
 
     it "should make Mod1 a Driver" do
       Mod1.should     be_a(Rainman::Driver)
@@ -60,8 +64,7 @@ describe Rainman::Driver do
     before(:each) do
       module Mod3
         extend Rainman::Driver
-        class Blah
-        end
+        class Blah; end
       end
 
       Mod3::instance_variable_set('@handlers', [])
@@ -115,7 +118,7 @@ describe Rainman::Driver do
       end
     end
 
-    it "should raise an error when :what is not specificed" do
+    it "should raise an error when :what is not specified" do
       expect { DriverMethods::test }.to raise_error(":what is required")
     end
   end
@@ -139,6 +142,30 @@ describe Rainman::Driver do
     it "should add a param to all methods" do
       expect { OptionAll::test }.to raise_error(":all is required")
       expect { OptionAll::other }.to raise_error(":all is required")
+    end
+  end
+
+  describe "#with_handler" do
+    it "should raise an error with an invalid handler" do
+      expect { Mod1::with_handler(:wtf) }.to raise_error(":wtf is not a valid handler")
+    end
+
+    it "should call the action with the specified handler" do
+      Mod1::with_handler(:vern).should be_a(Mod1::Vern)
+      Mod1::with_handler(:uhoh).should be_a(Mod1::Uhoh)
+
+      Mod1::with_handler(:vern).my_method.should eql(:vern)
+      Mod1::with_handler(:uhoh).my_method.should eql(:uhoh)
+    end
+
+    it "should yield a handler" do
+      hit = false
+      Mod1::with_handler(:vern) do |handler|
+        handler.should be_a(Mod1::Vern)
+        hit = true
+      end
+
+      hit.should be_true, "A handler was not yielded"
     end
   end
 

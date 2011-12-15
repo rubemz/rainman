@@ -47,6 +47,13 @@ module Rainman
       options[:global].add_option opts
     end
 
+    def with_handler(name, &block)
+      raise ":#{name} is not a valid handler" unless handlers.include?(name)
+      klass = "#{self.name}::#{name.to_s.camelize}".constantize.new
+      yield klass if block_given?
+      klass
+    end
+
   private
     # Records the driver handler in the @handlers array
     def add_handler(name)

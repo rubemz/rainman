@@ -88,7 +88,7 @@ my_class.register(:domain => 'test.com')
 my_class.nameservers.contacts
 
 # Using the :opensrs handler
-my_class.with_driver :opensrs do |driver|
+my_class.with_handler :opensrs do |driver|
   driver.register(:domain => 'test.com')
 end
 
@@ -102,6 +102,6 @@ my_class.domain.register(:domain => 'test.com')
 my_class.domain.nameservers.contacts
 
 # Using the :opensrs handler
-my_class.domain.with_driver :enom do |driver|
+my_class.domain.with_handler :enom do |driver|
   driver.register(:domain => 'test.com')
 end
