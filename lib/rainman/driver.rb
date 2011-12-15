@@ -7,7 +7,12 @@ module Rainman
 
     # Action options
     def options
-      @options ||= {}
+      @options ||= {:global => Option.new(:global)}
+    end
+
+    # Driver actions
+    def actions
+      @actions ||= []
     end
 
     # Registers a handler with the driver
@@ -26,16 +31,23 @@ module Rainman
     # Adds a driver method
     def define_action(name, &block)
       opts = Option.new(name)
+      actions << name
+
       if block_given?
         yield opts
-        options[name] = opts.all unless opts.all.empty?
+        options[name] = opts unless opts.all.empty?
       end
 
       (class << self; self; end).class_eval do
         define_method name do |*args|
+          options[:global].validate!(*args)
           opts.validate!(*args)
         end
       end
+    end
+
+    def add_option_all(opts = {})
+      options[:global].add_option opts
     end
 
   private

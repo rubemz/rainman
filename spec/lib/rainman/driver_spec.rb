@@ -85,7 +85,7 @@ describe Rainman::Driver do
   describe '#options' do
     subject { Mod1::options }
     it { should be_a(Hash) }
-    it { should be_empty }
+    it { should include(:global) }
   end
 
   describe '#add_option' do
@@ -99,12 +99,10 @@ describe Rainman::Driver do
 
     it "should add an :arg option" do
       hash = {
-        :test    => {
-          :arg   => true,
-          :other => { :required => true }
-        }
+        :arg   => true,
+        :other => { :required => true }
       }
-      AddOption::options.should include(hash)
+      AddOption::options[:test].all.should include(hash)
     end
   end
 
@@ -119,6 +117,28 @@ describe Rainman::Driver do
 
     it "should raise an error when :what is not specificed" do
       expect { DriverMethods::test }.to raise_error(":what is required")
+    end
+  end
+
+  describe "#actions" do
+    subject { Mod1::actions }
+
+    it { should include(:my_method) }
+  end
+
+  describe "#add_option_all" do
+    module OptionAll
+      extend Rainman::Driver
+
+      add_option_all :all => { :required => true }
+
+      define_action :test
+      define_action :other
+    end
+
+    it "should add a param to all methods" do
+      expect { OptionAll::test }.to raise_error(":all is required")
+      expect { OptionAll::other }.to raise_error(":all is required")
     end
   end
 
