@@ -15,6 +15,18 @@ module Rainman
       @actions ||= []
     end
 
+    def default_handler(value = :none)
+      if value == :none
+        @default_handler
+      else
+        @default_handler = value
+      end
+    end
+
+    def current_handler
+      @current_handler ||= default_handler
+    end
+
     # Registers a handler with the driver
     def register_handler(name, &block)
       add_handler(name)
@@ -39,6 +51,12 @@ module Rainman
         define_method(name) do |*args|
           options[:global].validate!(*args)
           options[name].validate!(*args)
+
+          if current_handler
+            with_handler(current_handler).send(name, *args)
+          else
+            raise "no handler specified"
+          end
         end
       end
     end

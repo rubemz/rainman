@@ -169,4 +169,43 @@ describe Rainman::Driver do
     end
   end
 
+  describe "#default_handler" do
+    module DefaultHandler
+      extend Rainman::Driver
+
+      class One
+        def my_method(opts = {})
+          [:one, opts]
+        end
+      end
+
+      class Two
+        def my_method(opts = {})
+          [:two, opts]
+        end
+      end
+
+      register_handler :one
+      register_handler :two
+
+      default_handler :one
+
+      define_action :my_method
+    end
+
+    it "should use a default handler" do
+      DefaultHandler::my_method.should eql([:one, {}])
+      DefaultHandler::with_handler(:two).my_method.should eql([:two,{}])
+      DefaultHandler::my_method.should eql([:one, {}])
+    end
+
+    it "should send the options" do
+      DefaultHandler::my_method(:test => 1).should eql([:one, {:test => 1}])
+    end
+
+    it "should raise an error without a default handler" do
+      expect { Mod1::my_method }.to raise_error("no handler specified")
+    end
+  end
+
 end
