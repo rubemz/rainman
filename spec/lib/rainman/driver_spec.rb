@@ -220,7 +220,7 @@ describe Rainman::Driver do
 
     context "Prefixing" do
       class IncludeDriverPrefix
-        Mod1::setup self, :prefix => :something
+        Mod1::setup :prefix => :something
       end
 
       subject { IncludeDriverPrefix.new }
@@ -234,7 +234,7 @@ describe Rainman::Driver do
 
     context "Options" do
       class OptionsDriver
-        Mod1::setup self, :default_handler => :vern
+        Mod1::setup :default_handler => :vern
       end
 
       subject { OptionsDriver.new }
