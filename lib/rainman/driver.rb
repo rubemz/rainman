@@ -30,18 +30,15 @@ module Rainman
 
     # Adds a driver method
     def define_action(name, &block)
-      opts = Option.new(name)
+      options[name] ||= Option.new(name)
       actions << name
 
-      if block_given?
-        yield opts
-        options[name] = opts unless opts.all.empty?
-      end
+      yield options[name] if block_given?
 
       (class << self; self; end).class_eval do
         define_method name do |*args|
           options[:global].validate!(*args)
-          opts.validate!(*args)
+          options[name].validate!(*args)
         end
       end
     end
