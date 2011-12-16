@@ -4,7 +4,7 @@ module Rainman
     module DSL
       def self.extended(base)
         class << base
-          attr_accessor :actions, :handlers, :default_handler, :current_handler
+          attr_accessor :actions, :handlers, :default_handler, :current_handler, :config
         end
 
         unless base.instance_variable_defined?(:@actions)
@@ -24,7 +24,15 @@ module Rainman
 
       def register_handler(name, &block)
         klass = "#{self.name}::#{name.to_s.camelize}".constantize
+
+        class << klass
+          attr_accessor :config
+        end unless klass.respond_to?(:config=)
+
+        klass.config = config || {}
+
         yield klass.config if block_given?
+
         handlers[name] = klass
       end
 
