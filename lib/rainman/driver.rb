@@ -1,3 +1,5 @@
+require 'forwardable'
+
 module Rainman
   module Driver
     # Array of known handlers
@@ -72,7 +74,23 @@ module Rainman
       klass
     end
 
-    def setup(opts = {})
+    def with_options(opts = {})
+      self.default_handler(opts[:default_handler]) if opts[:default_handler]
+      @prefix = opts[:prefix]
+      self
+    end
+
+    def included(base)
+      base.extend(Forwardable)
+      if @prefix
+        method_name = @prefix
+        target      = self
+        base.class_eval do
+          define_method(method_name) { target }
+        end
+      else
+        base.def_delegators self, *actions
+      end
     end
 
   private

@@ -208,9 +208,31 @@ describe Rainman::Driver do
     end
   end
 
-  describe "#setup" do
+  describe "#with_options" do
+    module WithOptions
+      extend Rainman::Driver
+      class Vern
+        def my_method(opts = {})
+          :vern
+        end
+      end
+
+      class Uhoh
+        def my_method(opts = {})
+          :uhoh
+        end
+      end
+
+      register_handler(:vern)
+      register_handler(:uhoh) do |config|
+        config[:hot] = true
+      end
+
+      define_action :my_method do
+      end
+    end
     class IncludeDriver
-      Mod1::setup
+      include WithOptions::with_options
     end
 
     subject { IncludeDriver.new }
@@ -220,12 +242,13 @@ describe Rainman::Driver do
 
     context "Prefixing" do
       class IncludeDriverPrefix
-        Mod1::setup :prefix => :something
+        include WithOptions::with_options(:prefix => :something)
       end
 
       subject { IncludeDriverPrefix.new }
 
-      it { should respond_to(:something) }
+      it { should     respond_to(:something) }
+      it { should_not respond_to(:my_method) }
 
       it "should deletegate :something to the driver" do
         subject.something.with_handler(:vern).my_method
@@ -234,7 +257,13 @@ describe Rainman::Driver do
 
     context "Options" do
       class OptionsDriver
-        Mod1::setup :default_handler => :vern
+        include WithOptions::with_options(:default_handler => :vern)
+      end
+
+      pending "This behavior is undecided" do
+        class OptionsDriverOther
+          include WithOptions::with_options(:default_handler => :uhoh)
+        end
       end
 
       subject { OptionsDriver.new }
