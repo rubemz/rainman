@@ -84,8 +84,7 @@ probably horribly broken right now.
 
   class MyClass
     # Actions are mixed in with a prefix of 'domain'
-    include Domain::with_options(
-      :prefix => 'domain', :default_handler => :opensrs
+    include Domain::with_options(:prefix => 'domain', :default_handler => :opensrs)
     )
   end
 
