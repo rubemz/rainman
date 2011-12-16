@@ -26,6 +26,7 @@ module Rainman
         klass = "#{self.name}::#{name.to_s.camelize}".constantize
         klass.extend(Rainman::Handler)
         yield klass.config if block_given?
+
         handlers[name] = klass
       end
 
