@@ -1,277 +1,202 @@
 require 'spec_helper'
 
 describe Rainman::Driver do
-  describe "#register_handler" do
-    module Mod1
-      extend Rainman::Driver
-      class Vern
-        def my_method(opts = {})
-          :vern
-        end
-      end
+  describe "DSL" do
+    module Extended
+      extend Rainman::Driver::DSL
+    end
 
-      class Uhoh
-        def my_method(opts = {})
-          :uhoh
-        end
-      end
+    module ExtendedWithExistingAttrs
+      extend Rainman::Driver::DSL
 
-      register_handler(:vern)
-      register_handler(:uhoh) do |config|
+      self.actions  = [:action]
+      self.handlers = [:handler]
+    end
+
+    module RegisterHandle
+      extend Rainman::Driver::DSL
+
+      class Mine; end
+      class Other; end
+
+      register_handler :mine
+      register_handler :other do |config|
         config[:hot] = true
       end
+    end
 
-      define_action :my_method do
+    describe "#self.extended" do
+      subject { Extended }
+
+      it { should respond_to(:actions, :handlers, :default_handler, :current_handler) }
+      its(:actions)  { should be_empty }
+      its(:handlers) { should be_empty }
+
+      context "Predefined actions and handlers" do
+        subject { ExtendedWithExistingAttrs }
+        its(:actions)  { should_not be_empty }
+        its(:handlers) { should_not be_empty }
       end
     end
 
-    it "should make Mod1 a Driver" do
-      Mod1.should     be_a(Rainman::Driver)
-      Mod1.should_not be_a(Rainman::Handler)
+    describe "#included" do
+      class Included
+        include Extended
+      end
+
+      subject { Included }
+
+      it "should set @actions and @handlers" do
+        subject.instance_variable_get('@actions').should be_empty
+        subject.instance_variable_get('@handlers').should be_empty
+      end
     end
 
-    it "should make Mod1::Vern a Handler" do
-      Mod1::Vern.should     be_a(Rainman::Handler)
-      Mod1::Vern.should_not be_a(Rainman::Driver)
+    describe "#register_handler" do
+
+      subject { RegisterHandle }
+
+      its(:handlers) { should include(:mine, :other) }
+
+      it "should store the class in the handler" do
+        RegisterHandle::handlers[:mine].should  eql(RegisterHandle::Mine)
+        RegisterHandle::handlers[:other].should eql(RegisterHandle::Other)
+      end
+
+      it "raise a uninitialized constant error" do
+        expect {
+          subject.register_handler('asdf')
+        }.to raise_error(/uninitialized constant RegisterHandle::Asdf/)
+      end
+
+      it "should yield a config" do
+        RegisterHandle::Mine.config.should be_empty
+        RegisterHandle::Other.config.should include(:hot => true)
+      end
     end
 
-    it "should raise an error for an unknow Handler" do
-      expect {
-        module Mod2
-          extend Rainman::Driver
-          register_handler(:what)
+    describe "#handlers" do
+      subject { RegisterHandle }
+
+      it { subject.handler_exists?(:other).should be_true }
+      it { subject.handler_exists?(:mine).should be_true }
+      it { subject.handler_exists?(:none).should be_false }
+    end
+
+    describe "#set_default_handler" do
+      module DefaultHandler
+        extend Rainman::Driver::DSL
+        class One;end
+        class Two;end
+
+        register_handler :one
+        register_handler :two
+      end
+
+      class DefaultHandlerClass
+        include DefaultHandler
+      end
+
+      subject { DefaultHandlerClass }
+
+      it "should set the default_handler" do
+        subject.default_handler.should be_nil
+        subject.set_default_handler :one
+        subject.default_handler.should eql(DefaultHandler::One)
+        subject.current_handler.should be_a(DefaultHandler::One)
+      end
+
+      it "should not set current_handler when it's already set" do
+        subject.set_current_handler :one
+        subject.set_default_handler :two
+        subject.current_handler.should be_a(DefaultHandler::One)
+        subject.default_handler.should eql(DefaultHandler::Two)
+      end
+    end
+
+    describe "#set_current_handler" do
+      module CurrentHandler
+        extend Rainman::Driver::DSL
+        class One;end
+        class Two;end
+
+        register_handler :one
+        register_handler :two
+      end
+
+      subject { CurrentHandler }
+
+      it "should set the current_handler without a default_driver" do
+        subject.default_handler.should be_nil
+        subject.current_handler.should be_nil
+
+        subject.set_current_handler :one
+        subject.current_handler.should be_a(CurrentHandler::One)
+        subject.default_handler.should be_nil
+      end
+
+      it "should set the current_handler with a default_handler" do
+        subject.set_default_handler :one
+        subject.default_handler.should eql(CurrentHandler::One)
+
+        subject.set_current_handler :two
+        subject.current_handler.should be_a(CurrentHandler::Two)
+
+        subject.default_handler.should eql(CurrentHandler::One)
+      end
+    end
+
+    describe "#define_action" do
+      module DefineAction
+        extend Rainman::Driver::DSL
+        class One
+          def action
+            :action_one
+          end
+
+          def second_action
+            :second_action_one
+          end
         end
-      }.to raise_error("Unknown handler 'Mod2::What'")
-    end
 
-    it "should yield a config" do
-      Mod1::Vern.config.should eql({})
-      Mod1::Uhoh.config.should eql({ :hot => true})
-    end
+        class Two
+          def action
+            :action_two
+          end
 
-    it "should keep track of it's handlers" do
-      Mod1::handlers.should include(:vern, :uhoh)
-    end
-  end
-
-  describe "#define_action" do
-    it "should define a method" do
-      Mod1.should respond_to(:my_method)
-    end
-  end
-
-  describe "#add_handler" do
-    before(:each) do
-      module Mod3
-        extend Rainman::Driver
-        class Blah; end
-      end
-
-      Mod3::instance_variable_set('@handlers', [])
-    end
-
-    it "should add a handler" do
-      Mod3::handlers.should be_empty
-      Mod3.send(:add_handler, :blah)
-      Mod3::handlers.should include(:blah)
-    end
-
-    it "should raise an error on duplicate handlers" do
-      Mod3::handlers.should be_empty
-      Mod3.send(:add_handler, :blah)
-      expect {
-        Mod3.send(:add_handler, :blah)
-      }.to raise_error("Handler already registered 'Mod3::Blah'")
-    end
-  end
-
-  describe '#options' do
-    subject { Mod1::options }
-    it { should be_a(Hash) }
-    it { should include(:global) }
-  end
-
-  describe '#add_option' do
-    module AddOption
-      extend Rainman::Driver
-      define_action(:test) do |m|
-        m.add_option :arg
-        m.add_option :other => { :required => true }
-      end
-    end
-
-    it "should add an :arg option" do
-      hash = {
-        :arg   => true,
-        :other => { :required => true }
-      }
-      AddOption::options[:test].all.should include(hash)
-    end
-  end
-
-  context "Calling a driver method" do
-    module DriverMethods
-      extend Rainman::Driver
-
-      define_action(:test) do |m|
-        m.add_option :what => { :required => true }
-      end
-    end
-
-    it "should raise an error when :what is not specified" do
-      expect { DriverMethods::test }.to raise_error(":what is required")
-    end
-  end
-
-  describe "#actions" do
-    subject { Mod1::actions }
-
-    it { should include(:my_method) }
-  end
-
-  describe "#add_option_all" do
-    module OptionAll
-      extend Rainman::Driver
-
-      add_option_all :all => { :required => true }
-
-      define_action :test
-      define_action :other
-    end
-
-    it "should add a param to all methods" do
-      expect { OptionAll::test }.to raise_error(":all is required")
-      expect { OptionAll::other }.to raise_error(":all is required")
-    end
-  end
-
-  describe "#with_handler" do
-    it "should raise an error with an invalid handler" do
-      expect { Mod1::with_handler(:wtf) }.to raise_error(":wtf is not a valid handler")
-    end
-
-    it "should call the action with the specified handler" do
-      Mod1::with_handler(:vern).should be_a(Mod1::Vern)
-      Mod1::with_handler(:uhoh).should be_a(Mod1::Uhoh)
-
-      Mod1::with_handler(:vern).my_method.should eql(:vern)
-      Mod1::with_handler(:uhoh).my_method.should eql(:uhoh)
-    end
-
-    it "should yield a handler" do
-      hit = false
-      Mod1::with_handler(:vern) do |handler|
-        handler.should be_a(Mod1::Vern)
-        hit = true
-      end
-
-      hit.should be_true, "A handler was not yielded"
-    end
-  end
-
-  describe "#default_handler" do
-    module DefaultHandler
-      extend Rainman::Driver
-
-      class One
-        def my_method(opts = {})
-          [:one, opts]
+          def second_action
+            :second_action_two
+          end
         end
+
+        register_handler :one
+        register_handler :two
+
+        define_action :action
+        define_action :second_action
       end
 
-      class Two
-        def my_method(opts = {})
-          [:two, opts]
+      subject { DefineAction }
+
+      its(:actions) { should include(:action, :second_action) }
+
+      context "Class including a driver" do
+        class DefineActionClass
+          include DefineAction
+          set_default_handler :one
         end
+
+        subject { DefineActionClass.new }
+        it { should respond_to(:action) }
+        it { should respond_to(:second_action) }
+
+        it "should delegate to the handler" do
+          subject.action.should        eql(:action_one)
+          subject.second_action.should eql(:second_action_one)
+        end
+
       end
-
-      register_handler :one
-      register_handler :two
-
-      default_handler :one
-
-      define_action :my_method
     end
 
-    it "should use a default handler" do
-      DefaultHandler::my_method.should eql([:one, {}])
-      DefaultHandler::with_handler(:two).my_method.should eql([:two,{}])
-      DefaultHandler::my_method.should eql([:one, {}])
-    end
-
-    it "should send the options" do
-      DefaultHandler::my_method(:test => 1).should eql([:one, {:test => 1}])
-    end
-
-    it "should raise an error without a default handler" do
-      expect { Mod1::my_method }.to raise_error("no handler specified")
-    end
   end
-
-  describe "#with_options" do
-    module WithOptions
-      extend Rainman::Driver
-      class Vern
-        def my_method(opts = {})
-          :vern
-        end
-      end
-
-      class Uhoh
-        def my_method(opts = {})
-          :uhoh
-        end
-      end
-
-      register_handler(:vern)
-      register_handler(:uhoh) do |config|
-        config[:hot] = true
-      end
-
-      define_action :my_method do
-      end
-    end
-    class IncludeDriver
-      include WithOptions::with_options
-    end
-
-    subject { IncludeDriver.new }
-
-    it { should respond_to(:my_method) }
-
-
-    context "Prefixing" do
-      class IncludeDriverPrefix
-        include WithOptions::with_options(:prefix => :something)
-      end
-
-      subject { IncludeDriverPrefix.new }
-
-      it { should     respond_to(:something) }
-      it { should_not respond_to(:my_method) }
-
-      it "should deletegate :something to the driver" do
-        subject.something.with_handler(:vern).my_method
-      end
-    end
-
-    context "Options" do
-      class OptionsDriver
-        include WithOptions::with_options(:default_handler => :vern)
-      end
-
-      pending "This behavior is undecided" do
-        class OptionsDriverOther
-          include WithOptions::with_options(:default_handler => :uhoh)
-        end
-      end
-
-      subject { OptionsDriver.new }
-
-      it "should use the default_handler" do
-        subject.my_method.should eql(:vern)
-      end
-    end
-  end
-
 end

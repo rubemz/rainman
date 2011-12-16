@@ -24,16 +24,18 @@ module Rainman
 
       def register_handler(name, &block)
         klass = "#{self.name}::#{name.to_s.camelize}".constantize
+        klass.extend(Rainman::Handler)
         yield klass.config if block_given?
         handlers[name] = klass
       end
 
       def handler_exists?(name)
-        !! handlers[name]
+        handlers.has_key?(name)
       end
 
       def set_default_handler(name)
         @default_handler = handlers[name]
+        set_current_handler(name) unless @current_handler
       end
 
       def set_current_handler(name)
