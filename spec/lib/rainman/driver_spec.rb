@@ -64,9 +64,10 @@ describe Rainman::Driver do
       end
 
       it "raise a uninitialized constant error" do
+        # the .* is used because RBX displays the exception in a different format
         expect {
           subject.register_handler('asdf')
-        }.to raise_error(/uninitialized constant RegisterHandle::Asdf/)
+        }.to raise_error(/uninitialized constant.* RegisterHandle::Asdf/)
       end
 
       it "should yield a config" do
