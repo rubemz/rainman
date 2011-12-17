@@ -199,5 +199,45 @@ describe Rainman::Driver do
       end
     end
 
+    context "Isolation" do
+      module Isolation
+        extend Rainman::Driver::DSL
+        class Lonely
+          def solitude
+            true
+          end
+        end
+
+        class Friends
+          def solitude
+           false
+          end
+        end
+
+        register_handler :lonely
+        register_handler :friends
+
+        define_action :solitude
+      end
+
+      class IsolationClass
+        include Isolation
+        set_default_handler :lonely
+      end
+
+      class IsolationClass2
+        include Isolation
+        set_default_handler :friends
+      end
+
+      it "should isolate it's self" do
+        IsolationClass::default_handler.should  eql(Isolation::Lonely)
+        IsolationClass2::default_handler.should eql(Isolation::Friends)
+
+        IsolationClass.new.solitude.should  be_true
+        IsolationClass2.new.solitude.should be_false
+      end
+    end
+
   end
 end
