@@ -281,7 +281,7 @@ describe Rainman::Driver do
         end
       end
 
-      it "should yield a block with :one" do
+      it "should yield a block with :two" do
         yield_test = mock()
         yield_test.should_receive(:tap)
         @current_handler.with_handler(:two) do |handler|
@@ -289,8 +289,9 @@ describe Rainman::Driver do
           yield_test.tap
         end
       end
-
     end
 
+    describe "Namespacing" do
+    end
   end
 end
