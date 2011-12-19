@@ -239,5 +239,58 @@ describe Rainman::Driver do
       end
     end
 
+    describe "#current_handler" do
+      module CurrentHandler
+        extend Rainman::Driver::DSL
+        class One
+          def hello
+            :one
+          end
+        end
+
+        class Two
+          def hello
+            :two
+          end
+        end
+
+        define_action :hello
+
+        register_handler :one
+        register_handler :two
+      end
+
+      class CurrentHandlerClass
+        include CurrentHandler
+        set_default_handler :one
+      end
+      before { @current_handler = CurrentHandlerClass.new }
+
+      it "should use the current_handler" do
+        @current_handler.with_handler(:one).hello.should eql(:one)
+        @current_handler.with_handler(:two).hello.should eql(:two)
+        @current_handler.hello.should eql(:one)
+      end
+
+      it "should yield a block with :one" do
+        yield_test = mock()
+        yield_test.should_receive(:tap)
+        @current_handler.with_handler(:one) do |handler|
+          handler.hello.should eql(:one)
+          yield_test.tap
+        end
+      end
+
+      it "should yield a block with :one" do
+        yield_test = mock()
+        yield_test.should_receive(:tap)
+        @current_handler.with_handler(:two) do |handler|
+          handler.hello.should eql(:two)
+          yield_test.tap
+        end
+      end
+
+    end
+
   end
 end

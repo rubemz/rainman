@@ -1,6 +1,14 @@
 module Rainman
   module Driver
 
+    module Helpers
+      def with_handler(handler, &block)
+        h = self.class.handlers[handler].new
+        yield h if block_given?
+        h
+      end
+    end
+
     module DSL
       def self.extended(base)
         class << base
@@ -19,6 +27,7 @@ module Rainman
       def included(base)
         base.instance_variable_set(:@actions,  actions)
         base.instance_variable_set(:@handlers, handlers)
+        base.send(:include, Helpers)
         base.extend(DSL)
       end
 
