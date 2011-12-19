@@ -12,7 +12,8 @@ module Rainman
     module DSL
       def self.extended(base)
         class << base
-          attr_accessor :actions, :handlers, :default_handler, :current_handler
+          attr_accessor :actions, :handlers, :default_handler
+          attr_accessor :current_handler, :options
         end
 
         unless base.instance_variable_defined?(:@actions)
@@ -22,11 +23,16 @@ module Rainman
         unless base.instance_variable_defined?(:@handlers)
           base.instance_variable_set(:@handlers, {})
         end
+
+        unless base.instance_variable_defined?(:@options)
+          base.instance_variable_set(:@options, {:global => Option.new(:global)})
+        end
       end
 
       def included(base)
         base.instance_variable_set(:@actions,  actions)
         base.instance_variable_set(:@handlers, handlers)
+        base.instance_variable_set(:@options,  options)
         base.send(:include, Helpers)
         base.extend(DSL)
       end
@@ -52,11 +58,21 @@ module Rainman
         @current_handler = handlers[name].new
       end
 
+      def add_option_all(opts = {})
+        options[:global].add_option opts
+      end
+
       def define_action(name, &block)
+        options[name] ||= Option.new(name)
         actions << name
+
+        yield options[name] if block_given?
 
         class_eval do
           define_method(name) do |*args|
+            self.class.options[:global].validate!(*args)
+            self.class.options[name].validate!(*args)
+
             if self.class.current_handler
               self.class.current_handler.send(name, *args)
             else

@@ -318,5 +318,81 @@ describe Rainman::Driver do
       end
 
     end
-  end
-end
+
+    describe '@options' do
+      module AddOption
+        extend Rainman::Driver
+        define_action(:test) do |m|
+          m.add_option :arg
+          m.add_option :other => { :required => true }
+        end
+      end
+
+      it { Extended::options.should be_a(Hash) }
+      it { Extended::options.should include(:global) }
+
+      it "should add an :arg option" do
+        hash = {
+          :arg   => true,
+          :other => { :required => true }
+        }
+        AddOption::options[:test].all.should include(hash)
+      end
+
+      context "Calling a driver method" do
+        module DriverMethods
+          extend Rainman::Driver
+
+          class One
+            def hello
+            end
+          end
+
+          register_handler :one
+
+          define_action(:hello) do |m|
+            m.add_option :what => { :required => true }
+          end
+        end
+
+        class DriverMethodsClass
+          include DriverMethods
+          set_default_handler :one
+        end
+
+        it "should raise an error when :what is not specified" do
+          d = DriverMethodsClass.new
+          expect { d.hello }.to raise_error(":what is required")
+        end
+      end
+    end
+
+    describe "#add_option_all" do
+      module OptionAll
+        extend Rainman::Driver
+        class One
+          def hello
+          end
+        end
+
+        register_handler :one
+
+        add_option_all :all => { :required => true }
+
+        define_action :hello
+        define_action :other
+      end
+
+      class OptionAllClass
+        include OptionAll
+        set_default_handler :one
+      end
+
+      it "should add a param to all methods" do
+        expect { OptionAllClass.new.hello }.to raise_error(":all is required")
+        expect { OptionAllClass.new.other }.to raise_error(":all is required")
+      end
+    end
+
+  end # DSL
+end # Driver
