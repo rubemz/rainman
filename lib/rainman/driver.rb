@@ -65,6 +65,9 @@ module Rainman
           end
         end
       end
+
+      def define_namespace(name, &block)
+      end
     end
 
     def self.extended(base)

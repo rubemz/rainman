@@ -292,6 +292,30 @@ describe Rainman::Driver do
     end
 
     describe "Namespacing" do
+      module Domain
+        extend Rainman::Driver::DSL
+        class Opensrs
+          class Nameservers
+            def transfer
+            end
+          end
+        end
+
+        register_handler :opensrs
+        define_namespace :nameservers do
+         define_action :transfer
+        end
+      end
+
+      class DomainClass
+        include Domain
+        set_default_handler :opensrs
+      end
+
+      it "should return the namespace handler" do
+        DomainClass.new.nameservers.should be_a(Domain::Opensrs::Nameservers)
+      end
+
     end
   end
 end
