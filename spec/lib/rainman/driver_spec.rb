@@ -313,6 +313,7 @@ describe Rainman::Driver do
       end
 
       it "should return the namespace handler" do
+        pending
         DomainClass.new.nameservers.should be_a(Domain::Opensrs::Nameservers)
       end
 
