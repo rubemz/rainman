@@ -211,12 +211,24 @@ describe Rainman::Driver do
       module Isolation
         extend Rainman::Driver::DSL
         class Lonely
+          class Alone
+            def time
+              :forever
+            end
+          end
+
           def solitude
             true
           end
         end
 
         class Friends
+          class Alone
+            def time
+              :never
+            end
+          end
+
           def solitude
            false
           end
@@ -226,6 +238,10 @@ describe Rainman::Driver do
         register_handler :friends
 
         define_action :solitude
+
+        define_namespace :alone do
+          define_action :time
+        end
       end
 
       class IsolationClass
@@ -244,6 +260,9 @@ describe Rainman::Driver do
 
         IsolationClass.new.solitude.should  be_true
         IsolationClass2.new.solitude.should be_false
+
+        IsolationClass.new.alone.time.should == :forever
+        IsolationClass2.new.alone.time.should == :never
       end
     end
 
@@ -311,7 +330,7 @@ describe Rainman::Driver do
 
         register_handler :opensrs
         define_namespace :nameservers do
-         define_action :transfer
+          define_action :transfer
         end
       end
 
@@ -321,10 +340,22 @@ describe Rainman::Driver do
       end
 
       it "should return the namespace handler" do
-        pending
         DomainClass.new.nameservers.should be_a(Domain::Opensrs::Nameservers)
       end
 
+      it "should memoize the namespace handler" do
+        domain = DomainClass.new
+        ns = domain.nameservers
+        domain.nameservers.should be(ns)
+      end
+
+      it "should include DSL" do
+        domain = DomainClass.new
+        ns = domain.nameservers.class
+        Rainman::Driver::DSL.instance_methods.each do |meth|
+          ns.should respond_to(meth)
+        end
+      end
     end
 
     describe '@options' do

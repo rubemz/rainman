@@ -83,6 +83,21 @@ module Rainman
       end
 
       def define_namespace(name, &block)
+        actions << name
+
+        define_method(name) do
+          if self.class.instance_variable_defined?("@#{name}")
+            self.class.instance_variable_get("@#{name}")
+          else
+            handler = self.class.current_handler.class.name
+            type = "#{handler}::#{name.to_s.camelize}"
+            klass = Class.new(type.constantize)
+            klass.extend(DSL)
+            klass.current_handler = type.constantize.new
+            klass.class_eval(&block)
+            self.class.instance_variable_set("@#{name}", klass.new)
+          end
+        end
       end
     end
 
