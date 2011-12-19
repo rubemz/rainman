@@ -76,7 +76,7 @@ module Rainman
             if self.class.current_handler
               self.class.current_handler.send(name, *args)
             else
-              raise "no handler silly"
+              raise "A default_handler has not been set"
             end
           end
         end

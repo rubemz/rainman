@@ -177,9 +177,17 @@ describe Rainman::Driver do
         define_action :second_action
       end
 
+      class NoDefaultHandler
+        include DefineAction
+      end
+
       subject { DefineAction }
 
       its(:actions) { should include(:action, :second_action) }
+
+      it "should raise an error without a default or current handler" do
+        expect { NoDefaultHandler.new.action }.to raise_error(/A default_handler/)
+      end
 
       context "Class including a driver" do
         class DefineActionClass
