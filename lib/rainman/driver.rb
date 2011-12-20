@@ -4,6 +4,33 @@ require 'active_support/core_ext/string'
 module Rainman
   module Driver
     Config = {}
+    Validations = { :global => Option.new(:global) }
+
+    # Executes the requested handler method after validating
+    class Runner
+      attr_accessor :handler, :name, :validations
+
+      def initialize(name, handler, validations)
+        @handler = handler
+        @name    = name
+        @validations = validations
+      end
+
+      def execute(method, *args, &block)
+        validations[:global].validate!(*args)
+        validations[name].validate!(*args) if validations.has_key?(name)
+
+        handler.send(method, *args, &block)
+      end
+
+      def method_missing(method, *args, &block)
+        if handler.respond_to?(method)
+          execute(method, *args, &block)
+        else
+          super
+        end
+      end
+    end
 
     # Return or yield an instance of the given handler.
     #
@@ -19,8 +46,9 @@ module Rainman
 
       begin
         set_current_handler name
-        yield current_handler_instance if block_given?
-        current_handler_instance
+        runner = Runner.new(name, current_handler_instance, validations)
+        yield runner if block_given?
+        runner
       ensure
         set_current_handler old_handler
       end
@@ -34,6 +62,10 @@ module Rainman
 
       def config
         Config
+      end
+
+      def validations
+        Validations
       end
 
       def set_default_handler(name)
@@ -133,7 +165,8 @@ module Rainman
       def define_action(name, *args, &block)
         define_method(name) do |*args|
           puts "Config: #{current_handler_instance.class.config}"
-          current_handler_instance.send(name, *args)
+          runner = Runner.new(current_handler, current_handler_instance, validations)
+          runner.send(name, *args, &block)
         end
       end
     end # module DSL
