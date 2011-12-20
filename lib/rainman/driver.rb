@@ -1,107 +1,145 @@
+require 'forwardable'
+require 'active_support/core_ext/string'
+
 module Rainman
   module Driver
+    Config = {}
 
-    module Helpers
-      def with_handler(handler, &block)
-        h = self.class.handlers[handler].new
-        yield h if block_given?
-        h
+    # Return or yield an instance of the given handler.
+    #
+    # Examples:
+    #
+    #     with_handler(:enom).transfer
+    #
+    #     with_handler(:enom) do |handler|
+    #       handler.transfer
+    #     end
+    def with_handler(name)
+      old_handler = current_handler
+
+      begin
+        set_current_handler name
+        yield current_handler_instance if block_given?
+        current_handler_instance
+      ensure
+        set_current_handler old_handler
       end
     end
 
     module DSL
-      def self.extended(base)
-        class << base
-          attr_accessor :actions, :handlers, :default_handler
-          attr_accessor :current_handler, :options
-        end
-
-        unless base.instance_variable_defined?(:@actions)
-          base.instance_variable_set(:@actions,  [])
-        end
-
-        unless base.instance_variable_defined?(:@handlers)
-          base.instance_variable_set(:@handlers, {})
-        end
-
-        unless base.instance_variable_defined?(:@options)
-          base.instance_variable_set(:@options, {:global => Option.new(:global)})
-        end
-      end
-
       def included(base)
-        base.instance_variable_set(:@actions,  actions)
-        base.instance_variable_set(:@handlers, handlers)
-        base.instance_variable_set(:@options,  options)
-        base.send(:include, Helpers)
-        base.extend(DSL)
+        base.extend(Forwardable)
+        base.def_delegators self, *(instance_methods + [:with_handler])
       end
 
-      def register_handler(name, &block)
-        klass = "#{self.name}::#{name.to_s.camelize}".constantize
-        klass.extend(Rainman::Handler)
-        yield klass.config if block_given?
-
-        handlers[name] = klass
-      end
-
-      def handler_exists?(name)
-        handlers.has_key?(name)
+      def config
+        Config
       end
 
       def set_default_handler(name)
-        @default_handler = handlers[name]
-        set_current_handler(name) unless @current_handler
+        @default_handler_class = handlers[name]
+        @default_handler       = name
       end
 
+      def default_handler
+        @default_handler
+      end
+
+      # Returns the name of the current handler, as an underscored symbol
+      #
+      # Example:
+      #     current_handler #=> :my_handler
+      def current_handler
+        @current_handler || @default_handler
+      end
+
+      # Returns the current handler class (as a constant)
+      def current_handler_class
+        @current_handler_class || @default_handler_class
+      end
+
+      # A hash store containing instances of any handlers invoked
+      def handler_instances
+        @handler_instances ||= {}
+      end
+
+      # Returns an instance of the current handler class
+      def current_handler_instance
+        handler_instances[current_handler] ||= current_handler_class.new
+      end
+
+      # Sets the current handler. Name should be an underscored symbol
+      # representing a class name in the current context
+      #
+      # Example:
+      #     set_current_handler :my_handler
       def set_current_handler(name)
-        @current_handler = handlers[name].new
-      end
-
-      def add_option_all(opts = {})
-        options[:global].add_option opts
-      end
-
-      def define_action(name, &block)
-        options[name] ||= Option.new(name)
-        actions << name
-
-        yield options[name] if block_given?
-
-        class_eval do
-          define_method(name) do |*args|
-            self.class.options[:global].validate!(*args)
-            self.class.options[name].validate!(*args)
-
-            if self.class.current_handler
-              self.class.current_handler.send(name, *args)
-            else
-              raise "A default_handler has not been set"
-            end
-          end
+        if name.nil?
+          @current_handler_class = @current_handler = nil
+        else
+          @current_handler_class = handlers[name]
+          @current_handler       = name
         end
       end
 
-      def define_namespace(name, &block)
-        actions << name
+      # A hash that stores handlers
+      #
+      # Keys are the handler name (eg: :my_handler); values are the handler class
+      # (eg: MyHandler)
+      def handlers
+        @handlers ||= Hash.new { |hash, key| raise "Invalid handler, '#{key}'" }
+      end
+
+      # Register a handler for use with the current driver
+      #
+      # Example:
+      #     register_handler :bob
+      def register_handler(name, *args, &block)
+        klass = "#{self.name}::#{name.to_s.camelize}".constantize
+
+        # klass.extend(Rainman::Handler)
+        klass.instance_eval do
+          def config
+            Config
+          end
+        end
+        klass.config[name] = {}
+        yield klass.config[name] if block_given?
+        handlers[name] = klass
+      end
+
+      # Create a new namespace
+      def namespace(name, *args, &block)
+        config[name] = args
 
         define_method(name) do
-          if self.class.instance_variable_defined?("@#{name}")
-            self.class.instance_variable_get("@#{name}")
-          else
-            handler = self.class.current_handler.class.name
-            type = "#{handler}::#{name.to_s.camelize}"
-            klass = Class.new(type.constantize)
-            klass.extend(DSL)
-            klass.current_handler = type.constantize.new
-            klass.class_eval(&block)
-            self.class.instance_variable_set("@#{name}", klass.new)
+          name = __method__.to_s
+          key = "@#{name}"
+
+          unless ivar = instance_variable_get(key)
+            ivar = instance_variable_set(key, {})
           end
+
+          klass = current_handler_class.const_get(name.camelize)
+          puts "Config: #{current_handler_class.config}"
+          klass.extend(DSL)
+
+          ivar[current_handler] ||= klass.new
+          ivar[current_handler]
         end
       end
-    end
+
+      # Define a new action
+      def define_action(name, *args, &block)
+        define_method(name) do |*args|
+          puts "Config: #{current_handler_instance.class.config}"
+          current_handler_instance.send(name, *args)
+        end
+      end
+    end # module DSL
 
     def self.extended(base)
+      base.extend(base)
       base.extend(DSL)
     end
   end
