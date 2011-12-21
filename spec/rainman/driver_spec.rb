@@ -11,12 +11,13 @@ module Rainman
     before do
       @handler = mock("Handler")
       @handler.stub(:hello).and_return(:hello)
+      @handler.class.stub(:validations).and_return(Rainman::Driver::Validations.dup)
     end
 
     let(:handler)     { @handler }
     let(:name)        { :name }
-    let(:validations) { Rainman::Driver::Validations.dup }
-    subject           { Driver::Runner.new(name, handler, validations) }
+    let(:validations) { @handler.class.validations }
+    subject           { Driver::Runner.new(name, handler) }
 
     context "Accessors" do
       its(:name)        { should eql(name) }

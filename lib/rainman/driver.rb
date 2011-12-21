@@ -8,12 +8,15 @@ module Rainman
 
     # Executes the requested handler method after validating
     class Runner
-      attr_accessor :handler, :name, :validations
+      attr_accessor :handler, :name
 
-      def initialize(name, handler, validations)
+      def initialize(name, handler)
         @handler = handler
         @name    = name
-        @validations = validations
+      end
+
+      def validations
+        @validations ||= handler.class.validations
       end
 
       def execute(method, *args, &block)
@@ -46,7 +49,7 @@ module Rainman
 
       begin
         set_current_handler name
-        runner = Runner.new(name, current_handler_instance, validations)
+        runner = Runner.new(name, current_handler_instance)
         yield runner if block_given?
         runner
       ensure
@@ -55,24 +58,49 @@ module Rainman
     end
 
     module DSL
+      # These methods are available in handler modules as class methods
+      module PublicMethods
+        # Returns a singleton Config object
+        def config
+          Config
+        end
+
+        # Returns a singleton Validations object
+        def validations
+          Validations
+        end
+      end
+
+      include PublicMethods
+
+      # A hash that stores handlers
+      #
+      # Keys are the handler name (eg: :my_handler); values are the handler class
+      # (eg: MyHandler)
+      def handlers
+        @handlers ||= Hash.new { |hash, key| raise "Invalid handler, '#{key}'" }
+      end
+
+      private
+
+      # Included hook; this is invoked when a Driver module is included in
+      # another class, eg:
+      #
+      #     class Service
+      #       include Domain
+      #     end
       def included(base)
         base.extend(Forwardable)
         base.def_delegators self, *(instance_methods + [:with_handler])
       end
 
-      def config
-        Config
-      end
-
-      def validations
-        Validations
-      end
-
+      # Sets the default handler used for this Driver
       def set_default_handler(name)
         @default_handler_class = handlers[name]
         @default_handler       = name
       end
 
+      # Returns this Driver's default handler
       def default_handler
         @default_handler
       end
@@ -114,27 +142,14 @@ module Rainman
         end
       end
 
-      # A hash that stores handlers
-      #
-      # Keys are the handler name (eg: :my_handler); values are the handler class
-      # (eg: MyHandler)
-      def handlers
-        @handlers ||= Hash.new { |hash, key| raise "Invalid handler, '#{key}'" }
-      end
-
       # Register a handler for use with the current driver
       #
       # Example:
       #     register_handler :bob
       def register_handler(name, *args, &block)
         klass = "#{self.name}::#{name.to_s.camelize}".constantize
+        klass.extend(DSL::PublicMethods)
 
-        # klass.extend(Rainman::Handler)
-        klass.instance_eval do
-          def config
-            Config
-          end
-        end
         klass.config[name] = {}
         yield klass.config[name] if block_given?
         handlers[name] = klass
@@ -165,7 +180,7 @@ module Rainman
       def define_action(name, *args, &block)
         define_method(name) do |*args|
           puts "Config: #{current_handler_instance.class.config}"
-          runner = Runner.new(current_handler, current_handler_instance, validations)
+          runner = Runner.new(current_handler, current_handler_instance)
           runner.send(name, *args, &block)
         end
       end
