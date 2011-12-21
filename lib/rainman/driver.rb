@@ -87,9 +87,9 @@ module Rainman
 
       begin
         set_current_handler name
-        runner = Runner.new(name, current_handler_instance)
-        yield runner if block_given?
-        runner
+        Runner.new(name, current_handler_instance).tap do |runner|
+          yield runner if block_given?
+        end
       ensure
         set_current_handler old_handler
       end
