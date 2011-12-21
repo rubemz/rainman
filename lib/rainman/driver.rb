@@ -7,18 +7,51 @@ module Rainman
     Validations = { :global => Option.new(:global) }
 
     # Executes the requested handler method after validating
+    #
+    # Examples
+    #
+    #   r = Runner.new(:domain, current_handler_instance)
+    #   r.transfer #=> Runs current_handler_instance.send(:transfer)
     class Runner
-      attr_accessor :handler, :name
+      # Public: Gets/Sets the Symbol name of the handler
+      attr_accessor :name
 
+      # Public: Gets/Sets the handler Class
+      attr_accessor :handler
+
+      # Public: Initialize a runner
+      #
+      # name    - A Symbol representing the name of the handler
+      # handler - A handler Class instance
+      #
+      # Examples
+      #
+      #   Runner.new(:domain, current_handler_instance)
       def initialize(name, handler)
         @handler = handler
         @name    = name
       end
 
+      # Public: Validations to run when a handler's methods are executed
+      #
+      # Returns the Rainman::Driver::Validations Hash singleton.
       def validations
         @validations ||= handler.class.validations
       end
 
+      # Public: Delegates the given method to the handler
+      #
+      # method - The method to send to the handler
+      # args   - Arguments to be supplied to the method (optional)
+      # block  - Block to be supplied to the method (optional)
+      #
+      # Examples
+      #
+      #   execute(:register)
+      #   execute(:register, { params: [] })
+      #   execute(:register, :one, :argument) do
+      #     # some code
+      #   end
       def execute(method, *args, &block)
         validations[:global].validate!(*args)
         validations[name].validate!(*args) if validations.has_key?(name)
@@ -26,6 +59,11 @@ module Rainman
         handler.send(method, *args, &block)
       end
 
+      # Public: Method missing hook used to proxy methods to a handler
+      #
+      # method - The missing method name
+      # args   - Arguments to be supplied to the method (optional)
+      # block  - Block to be supplied to the method (optional)
       def method_missing(method, *args, &block)
         if handler.respond_to?(method)
           execute(method, *args, &block)
