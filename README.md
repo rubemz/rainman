@@ -5,101 +5,182 @@ Rainman is an experiment in writing drivers and handlers.
 [Build Icon]: https://secure.travis-ci.org/site5/rainman.png?branch=master
 [Build Status]: http://travis-ci.org/site5/rainman
 
-## Getting Started
+## Overview
+
+Rainman is a Ruby implementation of the [abstract factory pattern][1].
+Abstract factories provide the general API used to interact with any number of
+interfaces. Interfaces perform actual operations. Rainman provides a simple DSL
+for implementing this design.
+
+[1]: http://en.wikipedia.org/wiki/Abstract_factory_pattern
+
+### Drivers & Handlers
+
+In Rainman, drivers represent abstract factories and handlers represent the
+interfaces those factories interact with. In simpler terms, drivers define
+_what_ things you can do; handlers define _how_ to do those things.
+
+### Creating a driver
+
+Rainman drivers are implemented as Modules. They must be extended with
+`Rainman::Driver` and use the driver DSL to define their public API. An
+example Domain driver might look like this:
 
 ```ruby
 require 'rainman'
 
-# Default is :autoload. You can also use :require or :none
-Rainman.load_strategy :autoload
-
+# The Domain module handles creating and deleting domains, and listing
+# nameservers
 module Domain
   extend Rainman::Driver
 
-  register_handler :opensrs do |config|
+  # Register Domain::Abc as a handler. An optional block yields a config hash
+  # which can be used to store variables needed by the handler class, in this
+  # case a username and password specific for Domain::Abc.
+  register_handler :abc |config|
     config.username 'username'
     config.password 'pass'
-    config.url      'https://www.opensrs.com/api'
   end
 
-  register_handler :enom do |config|
-    config.username 'weeee'
-    config.password 'something'
-    config.url      'https://reseller.enom.com'
+  # Register Domain::Xyz as a handler.
+  register_handler :xyz |config|
+    config.username 'username'
+    config.password 'pass'
   end
 
-  add_option_all :domain => { :required => true }
-
-  define_action :register do
-    add_option :years  => { :default => 1 }
+  # Register Domain.create as a public method. An optional block yields a
+  # config hash that can be used to specify validations to be run before the
+  # method is invoked.
+  define_action :create do
+    validate :username
   end
 
-  define_action :extend do
-    add_option :years  => { :default => 1 }
+  # Register Domain.destroy as a public method
+  define_action :destroy
+
+  # Register Domain.namservers.list as a public method
+  define_action :list, through: :nameservers
+end
+```
+
+### Implementing handlers
+
+Driver handlers are implemented as classes. They must be within the namespace
+of the driver Module. Using the example above, here are example handlers for
+Abc and Xyz:
+
+```ruby
+class Domain::Abc
+  # Public: Creates a new domain.
+  #
+  # Returns a Hash.
+  def create(params = {})
   end
 
-  define_action :something do
-    remove_option :domain
-  end
-
-  define_action :other do
-    add_option :domain => { :required => false }
-  end
-
-  define_action :whois
-
-  namespace :nameservers do
-    define_action :contacts
-  end
-
-  namespace :transfers, :inherit => true do
-    # Top level options from add_option_all are inherited
-    define_action :process
+  # Public: Destroy a domain
+  #
+  # Returns true or false.
+  def destroy(params = {})
   end
 end
 
-# Implimenting a handler
+class Domain::Xyz
+  # Public: Creates a new domain.
+  #
+  # Returns a Hash.
+  def create(params = {})
+  end
 
-module Domain
-  class Enom
-    include Rainman::Handler
+  # Public: Destroy a domain
+  #
+  # Returns true or false.
+  def destroy(params = {})
+  end
+end
+```
 
-    def register(opts = {})
-    end
+The example driver above also defined a `list` action through `nameservers`,
+(eg: `Domain.nameservers.list`). To implement this, a Nameservers class is
+created within each handler's namespace:
+
+```ruby
+class Domain::Abc::Nameserver
+
+  # Public: Lists nameservers for this domain.
+  #
+  # Returns an Array.
+  def list(params = {})
   end
 end
 
+class Domain::Xyz::Nameserver
 
-# Using the driver and handler
-class MyClass
-  # Actions are mixed in
-  include Domain::with_options(:default_handler => :enom)
+  # Public: Lists nameservers for this domain.
+  #
+  # Returns an Array.
+  def list(params = {})
+  end
+end
+```
+
+### Using a driver
+
+With a driver and handler defined, the driver can now be used in a few
+different ways.
+
+#### General
+
+A driver's actions are available as singleton methods. By default, actions are
+sent to the current handler, or a default handler if a handler is not currently
+in use.
+
+```ruby
+# Create a domain
+Domain.create({})
+
+# Destroy a domain
+Domain.destroy({})
+
+# List domain nameservers
+Domain.nameservers.list({})
+```
+
+#### Changing handlers
+
+It is possible to change the handler used at runtime using the `with_handler`
+method. The two examples below are identical:
+
+```ruby
+Domain.with_handler(:abc) do |driver|
+  driver.create
 end
 
-my_class = Myclass.new
+Domain.with_handler(:xyz).create
+```
 
-# Using :default_handler of :enom
-my_class.register(:domain => 'test.com')
-my_class.nameservers.contacts
+#### Including drivers in other classes
 
-# Using the :opensrs handler
-my_class.with_handler :opensrs do |driver|
-  driver.register(:domain => 'test.com')
-end
+A driver can be included in another class and it's actions are available as
+instance methods.
 
-class MyClass
+```ruby
+class Service
   include Domain
 end
 
-# Using :default_handler of :opensrs
-my_class.domain.register(:domain => 'test.com')
-my_class.domain.nameservers.contacts
+s = Service.new
 
-# Using the :opensrs handler
-my_class.domain.with_handler :enom do |driver|
-  driver.register(:domain => 'test.com')
+s.create
+
+s.destroy
+
+s.nameservers.list
+
+s.with_handler(:abc) do |driver|
+  driver.create
 end
 
+s.with_handler(:zyz).create
 ```
 
 ## Note on Patches/Pull Requests
