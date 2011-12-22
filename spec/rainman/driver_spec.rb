@@ -45,7 +45,31 @@ describe "Rainman::Driver" do
   end
 
   describe "#with_handler" do
+    before do
+      @klass = Class.new do
+        def hi; :hi_handler!; end
+      end
+      @handler = @klass.new
+      @module.stub(:current_handler_instance).and_return(@handler)
+    end
 
+    it "should temporarily change the current handler" do
+      old_handler = :old_lady
+      @module.should_receive(:set_current_handler).with(:blah)
+      @module.should_receive(:set_current_handler).with(old_handler)
+      @module.stub(:current_handler).and_return(old_handler)
+      @module.with_handler(:blah)
+    end
+
+    it "returns a Runner" do
+      @module.with_handler(:blah).should be_a(Rainman::Driver::Runner)
+    end
+
+    it "yields the runner if passed a block" do
+      @module.with_handler :blah do |runner|
+        runner.should be_a(Rainman::Driver::Runner)
+      end
+    end
   end
 
   describe "#set_default_handler" do
