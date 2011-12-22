@@ -48,6 +48,8 @@ describe "Rainman::Driver" do
     before do
       @klass = Class.new do
         def hi; :hi_handler!; end
+        def self.handler_name; :blah; end
+        def self.validations; { :global => Rainman::Option.new(:global) }; end
       end
       @handler = @klass.new
       @module.stub(:current_handler_instance).and_return(@handler)
@@ -66,9 +68,11 @@ describe "Rainman::Driver" do
     end
 
     it "yields the runner if passed a block" do
-      @module.with_handler :blah do |runner|
+      res = @module.with_handler :blah do |runner|
         runner.should be_a(Rainman::Driver::Runner)
+        runner.hi
       end
+      res.should == :hi_handler!
     end
   end
 
