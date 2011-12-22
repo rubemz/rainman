@@ -1,26 +1,23 @@
 # Rainman [![Rainman Build Status][Build Icon]][Build Status]
 
-Rainman is an experiment in writing drivers and handlers.
+Rainman is an experiment in writing drivers and handlers. It is a Ruby
+implementation of the [abstract factory pattern][1]. Abstract factories provide
+the general API used to interact with any number of interfaces. Interfaces
+perform actual operations. Rainman provides a simple DSL for implementing this
+design.
+
+[1]: http://en.wikipedia.org/wiki/Abstract_factory_pattern
 
 [Build Icon]: https://secure.travis-ci.org/site5/rainman.png?branch=master
 [Build Status]: http://travis-ci.org/site5/rainman
 
-## Overview
-
-Rainman is a Ruby implementation of the [abstract factory pattern][1].
-Abstract factories provide the general API used to interact with any number of
-interfaces. Interfaces perform actual operations. Rainman provides a simple DSL
-for implementing this design.
-
-[1]: http://en.wikipedia.org/wiki/Abstract_factory_pattern
-
-### Drivers & Handlers
+## Drivers & Handlers
 
 In Rainman, drivers represent abstract factories and handlers represent the
 interfaces those factories interact with. In simpler terms, drivers define
 _what_ things you can do; handlers define _how_ to do those things.
 
-### Creating a driver
+## Creating a driver
 
 Rainman drivers are implemented as Modules. They must be extended with
 `Rainman::Driver` and use the driver DSL to define their public API. An
@@ -63,7 +60,7 @@ module Domain
 end
 ```
 
-### Implementing handlers
+## Implementing handlers
 
 Driver handlers are implemented as classes. They must be within the namespace
 of the driver Module. Using the example above, here are example handlers for
@@ -123,12 +120,12 @@ class Domain::Xyz::Nameserver
 end
 ```
 
-### Using a driver
+## Using a driver
 
 With a driver and handler defined, the driver can now be used in a few
 different ways.
 
-#### General
+### General
 
 A driver's actions are available as singleton methods. By default, actions are
 sent to the current handler, or a default handler if a handler is not currently
@@ -145,7 +142,7 @@ Domain.destroy({})
 Domain.nameservers.list({})
 ```
 
-#### Changing handlers
+### Changing handlers
 
 It is possible to change the handler used at runtime using the `with_handler`
 method. The two examples below are identical:
@@ -158,7 +155,7 @@ end
 Domain.with_handler(:xyz).create
 ```
 
-#### Including drivers in other classes
+### Including drivers in other classes
 
 A driver can be included in another class and it's actions are available as
 instance methods.
