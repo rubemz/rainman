@@ -3,6 +3,7 @@ require 'active_support/core_ext/string'
 
 module Rainman
   autoload :Exceptions, 'rainman/exceptions'
+  autoload :Stash,      'rainman/stash'
   autoload :Option,     'rainman/option'
   autoload :Driver,     'rainman/driver'
   autoload :Handler,    'rainman/handler'

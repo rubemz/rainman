@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'rainman/stash'
 
 describe Rainman::Stash do
   subject { Rainman::Stash.new(food: 'pizza') }
