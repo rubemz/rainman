@@ -1,12 +1,12 @@
 require 'spec_helper'
 
-describe Rainman::Exceptions do
+describe "Rainman Exceptions" do
   describe "AlreadyImplemented" do
     it "raises with message" do
       expect do
-        raise Rainman::Exceptions::AlreadyImplemented, :blah
+        raise Rainman::AlreadyImplemented, :blah
       end.to raise_error(
-        Rainman::Exceptions::AlreadyImplemented,
+        Rainman::AlreadyImplemented,
         /Method :blah already exists!/
       )
     end
@@ -15,10 +15,21 @@ describe Rainman::Exceptions do
   describe "InvalidHandler" do
     it "raises with message" do
       expect do
-        raise Rainman::Exceptions::InvalidHandler, :blah
+        raise Rainman::InvalidHandler, :blah
       end.to raise_error(
-        Rainman::Exceptions::InvalidHandler,
+        Rainman::InvalidHandler,
         /Handler :blah is invalid! Maybe you need to call 'register_handler :blah'\?/
+      )
+    end
+  end
+
+  describe "MissingParameter" do
+    it "raises with message" do
+      expect do
+        raise Rainman::MissingParameter, :blah
+      end.to raise_error(
+        Rainman::MissingParameter,
+        /Missing parameter :blah!/
       )
     end
   end
