@@ -276,7 +276,7 @@ module Rainman
     #     # code to execute
     #   end
     #
-    # Raises Rainman::AlreadyImplemented if the method
+    # Raises Rainman::AlreadyImplemented if the method already exists.
     #
     # Returns a Proc.
     def create_method(method, *args, &block)
