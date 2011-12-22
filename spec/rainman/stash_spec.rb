@@ -37,4 +37,24 @@ describe Rainman::Stash do
   it "raises NameError when assigning with =" do
     expect { subject.favorites = :pizza }.to raise_error(NameError)
   end
+
+  it "allows assignment via []=" do
+    subject[:beverage] = :coke
+    subject.to_hash.should have_key(:beverage)
+    subject.beverage.should == :coke
+  end
+
+  it "allows lookup via []" do
+    subject[:food].should == 'pizza'
+  end
+
+  it "returns the value when assigning a single value" do
+    ret = subject.toppings :cheese
+    ret.should == :cheese
+  end
+
+  it "returns the values when assigning multiple values" do
+    ret = subject.toppings :cheese, :sausage
+    ret.should == [:cheese, :sausage]
+  end
 end

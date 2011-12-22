@@ -36,18 +36,53 @@ module Rainman
       @hash
     end
 
+    # Public: Retrieve value from @hash.
+    #
+    # key - The Symbol key to lookup in @hash.
+    #
+    # Examples
+    #
+    #   stash = Stash.new(name: "ABC")
+    #   stash[:name] #=> 'ABC'
+    #
+    # Returns the value.
+    def [](key)
+      @hash[key]
+    end
+
+    # Public: Sets value on @hash.
+    #
+    # key    - The Symbol key to add to @hash.
+    # values - An Array (splat) of values to assign.
+    #
+    # Examples
+    #
+    #   stash = Stash.new
+    #   stash[:name] = 'ABC'
+    #   stash.name #=> 'ABC'
+    #
+    #   stash[:name] = nil
+    #   stash.name #=> nil
+    #
+    # Returns the value being set or nil if the value was cleared.
+    def []=(key, values)
+      if values.size == 1 && values[0].nil?
+        @hash.delete(key)
+        nil
+      else
+        @hash[key] = values.size == 1 ? values[0] : values
+      end
+    end
+
     # Internal: Used to allow lookup/assignment of variables from @hash.
     def method_missing(method, *args)
       if method.to_s[-1, 1] == '='
         super
-      elsif args.size == 1 && args[0].nil?
-        @hash.delete(method)
-        nil
       elsif args.size > 0
-        @hash[method] = args.size == 1 ? args[0] : args
-      else
-        @hash[method]
+        self[method] = args
       end
+
+      self[method]
     end
   end
 end
