@@ -1,11 +1,10 @@
-require 'forwardable'
-require 'active_support/core_ext/string'
-require 'active_support/core_ext/array'
+require "rainman/driver/runner"
+require "forwardable"
+require "active_support/core_ext/string"
+require "active_support/core_ext/array"
 
 module Rainman
   module Driver
-    autoload :Runner, 'rainman/driver/runner'
-
     # Public: Extended hook; this is run when a module extends itself with
     # the Rainman::Driver module.
     def self.extended(base)

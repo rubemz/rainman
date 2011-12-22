@@ -1,13 +1,11 @@
 require "rainman/version"
-require 'active_support/core_ext/string'
+require "rainman/exceptions"
+require "rainman/stash"
+require "rainman/option"
+require "rainman/driver"
+require "rainman/handler"
 
 module Rainman
-  autoload :Exceptions, 'rainman/exceptions'
-  autoload :Stash,      'rainman/stash'
-  autoload :Option,     'rainman/option'
-  autoload :Driver,     'rainman/driver'
-  autoload :Handler,    'rainman/handler'
-
   extend self
 
   def load_strategy(strategy = nil)
