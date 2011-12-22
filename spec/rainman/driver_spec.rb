@@ -2,13 +2,8 @@ require 'spec_helper'
 
 
 describe "Rainman::Driver" do
-  describe Rainman::Driver do
-    it { Rainman::Driver::Configuration.should be_a(Hash) }
-    it { Rainman::Driver::Validations.should be_a(Hash) }
-  end
-
-
   before do
+    Rainman::Driver.instance_variable_set(:@all, [])
     @module = Module.new do
       def self.name
         'MissDaisy'
@@ -27,6 +22,12 @@ describe "Rainman::Driver" do
     end
   end
 
+  describe "::all" do
+    it "returns an array of registered drivers" do
+      Rainman::Driver.all.should == [@module]
+    end
+  end
+
   describe "#handlers" do
     it "returns an empty hash" do
       @module.handlers.should == {}
@@ -34,6 +35,12 @@ describe "Rainman::Driver" do
 
     it "raises exception when accessing an unknown key" do
       expect { @module.handlers[:foo] }.to raise_error(Rainman::InvalidHandler)
+    end
+  end
+
+  describe "#config" do
+    it "returns an empty hash" do
+      @module.config.should == {}
     end
   end
 
@@ -60,18 +67,20 @@ describe "Rainman::Driver" do
       @class = Class.new do
         extend Rainman::Driver::HandlerMethods
       end
+      @module.config[:blah] = {}
+      @class.instance_variable_set(:@config, @module.config[:blah])
       @class.instance_variable_set(:@handler_name, :blah)
     end
 
     describe "#config" do
-      it "returns Configuration[handler_name]" do
-        @class.config.should eq Rainman::Driver::Configuration[:blah]
+      it "returns the config" do
+        @class.config.should eq @module.config[:blah]
       end
     end
 
     describe "#validations" do
-      it "returns Validations[handler_name]" do
-        @class.validations.should eq Rainman::Driver::Validations[:blah]
+      it "returns the validations" do
+        @class.validations.should eq @module.config[:blah][:validations]
       end
     end
 

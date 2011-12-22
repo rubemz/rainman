@@ -6,18 +6,27 @@ module Rainman
   module Driver
     autoload :Runner, 'rainman/driver/runner'
 
-    # Public: A singleton Hash that stores configuration variables that can be
-    # used by handlers and actions in a driver.
-    Configuration = {}
-
-    # Public: A singleton Hash that stores validation info that can be used by
-    # handlers and actions in a driver.
-    Validations   = {}
-
     # Public: Extended hook; this is run when a module extends itself with
     # the Rainman::Driver module.
     def self.extended(base)
+      all << base
       base.extend(base)
+    end
+
+    # Public: Get a list of all Drivers (eg: Modules that are extended with
+    # Rainman::Driver)
+    #
+    # Returns an Array.
+    def self.all
+      @all ||= []
+    end
+
+    # Public: A Hash that stores configuration variables that can be
+    # used by handlers and actions in a driver.
+    #
+    # Returns a Hash.
+    def config
+      @config ||= {}
     end
 
     # Public: Registered handlers
@@ -88,14 +97,14 @@ module Rainman
       #
       # Returns the Rainman::Driver::Config Hash singleton.
       def config
-        Configuration[handler_name] ||= {}
+        @config
       end
 
       # Public: Alias for the Validations hash.
       #
       # Returns the Rainman::Driver::Validations Hash singleton.
       def validations
-        Validations[handler_name] ||= {}
+        config[:validations] ||= {}
       end
 
       # Public: The name of this handler.
@@ -193,11 +202,15 @@ module Rainman
       )
 
       klass = opts[:class_name].constantize
+
       klass.extend(HandlerMethods)
       klass.instance_variable_set(:@handler_name, name.to_sym)
 
-      klass.config[name] = {}
-      yield klass.config[name] if block_given?
+      klass_config = config[name.to_sym] = {}
+      klass.instance_variable_set(:@config, klass_config)
+
+      yield klass_config if block_given?
+
       handlers[name] = klass
     end
 
@@ -214,7 +227,9 @@ module Rainman
     #
     # Returns a Proc.
     def define_action(name, *opts)
-      # yield config[name] if block_given?
+      config[name] = {}
+
+      yield config[name] if block_given?
 
       create_method(name) do |*args, &block|
         runner = Runner.new(current_handler_instance)
