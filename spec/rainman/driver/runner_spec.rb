@@ -1,16 +1,17 @@
 require 'spec_helper'
 
-describe Rainman::Driver::Runner, :pending => true do
+describe Rainman::Driver::Runner do
   before do
     @handler = mock("Handler")
     @handler.stub(:hello).and_return(:hello)
-    @handler.class.stub(:validations).and_return(Rainman::Driver::Validations.dup)
+    @handler.class.stub(:handler_name).and_return(:name)
+    @handler.class.stub(:validations).and_return({ :global => Rainman::Option.new(:global), :validate => :me })
   end
 
   let(:handler)     { @handler }
   let(:name)        { :name }
   let(:validations) { @handler.class.validations }
-  subject           { Driver::Runner.new(name, handler) }
+  subject           { Rainman::Driver::Runner.new(handler) }
 
   context "Accessors" do
     its(:name)        { should eql(name) }
@@ -26,7 +27,7 @@ describe Rainman::Driver::Runner, :pending => true do
     end
 
     it "should validate locally" do
-      validations.merge!(name => Option.new(name))
+      validations.merge!(name => Rainman::Option.new(name))
       validations[:global].should_receive(:validate!).with(1)
       validations[name].should_receive(:validate!)
       subject.execute(:hello, 1)
