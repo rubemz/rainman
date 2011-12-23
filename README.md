@@ -31,6 +31,10 @@ require 'rainman'
 module Domain
   extend Rainman::Driver
 
+  # Set global configuration variables you need to access across all handlers.
+  config.username   'username'
+  config.user_agent 'SuperAwesome Domain Manager'
+
   # Register Domain::Abc as a handler. An optional block yields a config hash
   # which can be used to store variables needed by the handler class, in this
   # case a username and password specific for Domain::Abc.
@@ -43,6 +47,8 @@ module Domain
   register_handler :xyz do
     config.username 'username'
     config.password 'pass'
+
+    validate :username
   end
 
   # Register Domain.create as a public method. An optional block yields a
@@ -56,7 +62,9 @@ module Domain
   define_action :destroy
 
   # Register Domain.namservers.list as a public method
-  define_action :list, through: :nameservers
+  namespace :nameservers do
+    define_action :list
+  end
 end
 ```
 
@@ -96,9 +104,13 @@ class Domain::Xyz
 end
 ```
 
-The example driver above also defined a `list` action through `nameservers`,
-(eg: `Domain.nameservers.list`). To implement this, a Nameservers class is
-created within each handler's namespace:
+Handler classes automatically have `config` and `validation` class methods
+available. These are hashes that contain configs/validations specific to the
+handler.
+
+The example driver above also defined `nameservers` namespace with a `list`
+action (eg: `Domain.nameservers.list`). To implement this, a Nameservers class
+is created within each handler's namespace:
 
 ```ruby
 class Domain::Abc::Nameserver
