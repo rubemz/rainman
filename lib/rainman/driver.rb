@@ -13,7 +13,7 @@ module Rainman
     end
 
     # Public: Get a list of all Drivers (eg: Modules that are extended with
-    # Rainman::Driver)
+    # Rainman::Driver).
     #
     # Returns an Array.
     def self.all
@@ -31,7 +31,7 @@ module Rainman
     # Public: Registered handlers
     #
     # Keys are the handler name (eg: :my_handler); values are the handler
-    # class (eg: MyHandler)
+    # class (eg: MyHandler).
     #
     # Raises NoHandler if an attempt to access a key of nil is made, (eg:
     # handlers[nil]).
@@ -79,7 +79,7 @@ module Rainman
       end
     end
 
-    # Public: Sets the default handler used for this Driver
+    # Public: Sets the default handler used for this Driver.
     #
     # name - The Symbol name to set as the default handler. Should be a key
     #        from handlers.
@@ -91,7 +91,7 @@ module Rainman
 
     # Public: Get the default handler used for this Driver.
     #
-    # Returns the Symbol name of this Driver's default handler
+    # Returns the Symbol name of this Driver's default handler.
     def default_handler
       @default_handler
     end
@@ -124,7 +124,7 @@ module Rainman
       module InstanceMethods
         # Public: A Runner is automatically available to handler instances.
         #
-        # Returns a Rainman::Runner
+        # Returns a Rainman::Runner.
         def runner
           @runner ||= Runner.new(self)
         end
@@ -132,6 +132,8 @@ module Rainman
 
       # Public: Extended hook; this adds the InstanceMethods module to handler
       # classes.
+      #
+      # base - The Module/Class that was extended with this module.
       def self.extended(base)
         base.send(:include, InstanceMethods)
       end
@@ -170,7 +172,7 @@ module Rainman
     end
 
     # Private: Sets the current handler. Name should be an underscored symbol
-    # representing a class name in the current context
+    # representing a class name in the current context.
     #
     # name - The Symbol name of the handler to use. Can be set to nil to
     #        clear the current handler.
@@ -202,7 +204,7 @@ module Rainman
       @current_handler || @default_handler
     end
 
-    # Private: Register a handler for use with the current Driver
+    # Private: Register a handler for use with the current Driver.
     #
     # name - The Symbol handler name.
     # opts - A Hash containing optional arguments:
@@ -233,7 +235,7 @@ module Rainman
       handlers[name] = klass
     end
 
-    # Private: Define a new action
+    # Private: Define a new action.
     #
     # name - The Symbol handler name.
     # opts - Options (unused currently).
