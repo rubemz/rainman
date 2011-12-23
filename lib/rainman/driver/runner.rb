@@ -34,7 +34,7 @@ module Rainman
       #
       # Returns the Rainman::Driver::Validations Hash singleton.
       def validations
-        @validations ||= handler.class.validations
+        handler.class.validations
       end
 
       # Public: Delegates the given method to the handler.
