@@ -9,10 +9,10 @@ module Rainman
     #     r.transfer
     #   end
     class Runner
-      # Public: Gets the handler Class
+      # Public: Gets the handler Class.
       attr_reader :handler
 
-      # Public: Initialize a runner
+      # Public: Initialize a runner.
       #
       # handler - A handler Class instance
       #
@@ -23,21 +23,21 @@ module Rainman
         @handler = handler
       end
 
-      # Public: Get the Symbol name of the handler
+      # Public: Get the Symbol name of the handler.
       #
       # Returns a Symbol.
       def name
         @handler.class.handler_name
       end
 
-      # Public: Validations to run when a handler's methods are executed
+      # Public: Validations to run when a handler's methods are executed.
       #
       # Returns the Rainman::Driver::Validations Hash singleton.
       def validations
         @validations ||= handler.class.validations
       end
 
-      # Public: Delegates the given method to the handler
+      # Public: Delegates the given method to the handler.
       #
       # method - The method to send to the handler
       # args   - Arguments to be supplied to the method (optional)
@@ -61,7 +61,7 @@ module Rainman
         handler.send(method, *args, &block)
       end
 
-      # Public: Method missing hook used to proxy methods to a handler
+      # Public: Method missing hook used to proxy methods to a handler.
       #
       # method - The missing method name
       # args   - Arguments to be supplied to the method (optional)

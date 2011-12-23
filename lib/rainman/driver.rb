@@ -21,7 +21,7 @@ module Rainman
     end
 
     # Public: A Hash that stores configuration variables that can be
-    # used by handlers and actions in a driver.
+    # used by handlers and actions in a Driver.
     #
     # Returns a Hash.
     def config
@@ -49,7 +49,7 @@ module Rainman
       end
     end
 
-    # Public: Temporarily change a driver's current handler. If a block is
+    # Public: Temporarily change a Driver's current handler. If a block is
     # supplied, it will be evaluated. This is useful to perform actions using
     # multiple handlers without changing defaults.
     #
@@ -84,14 +84,12 @@ module Rainman
     # name - The Symbol name to set as the default handler. Should be a key
     #        from handlers.
     #
-    # Raises RuntimeError if a handler cannot be found.
-    #
-    # Returns the Symbol name
+    # Returns the Symbol name.
     def set_default_handler(name)
       @default_handler = name
     end
 
-    # Public: Get the default handler used for this Driver
+    # Public: Get the default handler used for this Driver.
     #
     # Returns the Symbol name of this Driver's default handler
     def default_handler
@@ -204,7 +202,7 @@ module Rainman
       @current_handler || @default_handler
     end
 
-    # Private: Register a handler for use with the current driver
+    # Private: Register a handler for use with the current Driver
     #
     # name - The Symbol handler name
     # opts - A Hash containing optional arguments:

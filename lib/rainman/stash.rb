@@ -23,8 +23,6 @@ module Rainman
     # Internal: Initializes a new Stash object.
     #
     # params - A Hash of parameters to set.
-    #
-    # Returns nothing.
     def initialize(params = {})
       @hash = params
     end
