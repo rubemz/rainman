@@ -34,13 +34,13 @@ module Domain
   # Register Domain::Abc as a handler. An optional block yields a config hash
   # which can be used to store variables needed by the handler class, in this
   # case a username and password specific for Domain::Abc.
-  register_handler :abc |config|
+  register_handler :abc do
     config.username 'username'
     config.password 'pass'
   end
 
   # Register Domain::Xyz as a handler.
-  register_handler :xyz |config|
+  register_handler :xyz do
     config.username 'username'
     config.password 'pass'
   end
