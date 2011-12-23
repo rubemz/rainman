@@ -4,6 +4,8 @@ require "active_support/core_ext/string"
 require "active_support/core_ext/array"
 
 module Rainman
+  # The Rainman::Driver module contains methods for defining Drivers and
+  # proxying their associated actions to the appropriate handlers.
   module Driver
     # Public: Extended hook; this is run when a module extends itself with
     # the Rainman::Driver module.
@@ -28,7 +30,7 @@ module Rainman
       @config ||= {}
     end
 
-    # Public: Registered handlers
+    # Public: Registered handlers.
     #
     # Keys are the handler name (eg: :my_handler); values are the handler
     # class (eg: MyHandler).
