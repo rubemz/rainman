@@ -36,6 +36,10 @@ describe "Rainman::Driver" do
     it "raises exception when accessing an unknown key" do
       expect { @module.handlers[:foo] }.to raise_error(Rainman::InvalidHandler)
     end
+
+    it "raises exception when accessing a nil key" do
+      expect { @module.handlers[nil] }.to raise_error(Rainman::NoHandler)
+    end
   end
 
   describe "#config" do

@@ -33,11 +33,20 @@ module Rainman
     # Keys are the handler name (eg: :my_handler); values are the handler
     # class (eg: MyHandler)
     #
-    # Raises RuntimeError if a lookup fails.
+    # Raises NoHandler if an attempt to access a key of nil is made, (eg:
+    # handlers[nil]).
+    #
+    # Raises InvalidHandler if an attempt to access an invalid key is made.
     #
     # Returns a Hash.
     def handlers
-      @handlers ||= Hash.new { |hash, key| raise InvalidHandler, key }
+      @handlers ||= Hash.new do |hash, key|
+        if key.nil?
+          raise NoHandler
+        else
+          raise InvalidHandler, key
+        end
+      end
     end
 
     # Public: Temporarily change a driver's current handler. If a block is
@@ -151,9 +160,6 @@ module Rainman
     def included(base)
       base.extend(::Forwardable)
       base.def_delegators self, *singleton_methods
-      # base.def_delegators self, *(instance_methods + [
-      #   :with_handler, :handlers, :default_handler, :set_default_handler
-      # ])
     end
 
     # Private: A hash containing handler instances. This prevents handlers
