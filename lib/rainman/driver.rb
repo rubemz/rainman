@@ -113,12 +113,18 @@ module Rainman
         @handler_name
       end
 
+      # These instance methods are available to handler instances.
       module InstanceMethods
+        # Public: A Runner is automatically available to handler instances.
+        #
+        # Returns a Rainman::Runner
         def runner
           @runner ||= Runner.new(self)
         end
       end
 
+      # Public: Extended hook; this adds the InstanceMethods module to handler
+      # classes.
       def self.extended(base)
         base.send(:include, InstanceMethods)
       end
