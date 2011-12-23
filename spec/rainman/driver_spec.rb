@@ -210,9 +210,11 @@ describe "Rainman::Driver" do
     end
 
     it "evaluates a block if given" do
-      blk = lambda { }
-      @bob.should_receive(:instance_eval).with(&blk)
-      @module.send(:register_handler, :bob, &blk)
+      @module.send(:register_handler, :bob) do
+        config[:test] = :omghi2u
+      end
+      @bob.config.should have_key(:test)
+      @bob.config[:test].should == :omghi2u
     end
   end
 
