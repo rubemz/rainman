@@ -16,6 +16,17 @@ module Rainman
     end
   end
 
+  # NoHandler is raised when attempting to do something that needs a handler,
+  # but no default or current handler can be found.
+  class NoHandler < StandardError
+    def initialize
+      super "No handler is set! Maybe you need to " <<
+            "call 'set_default_handler'?"
+    end
+  end
+
+  # MissingParameter is raised when trying to send a request to a runner that
+  # is missing parameters/arguments.
   class MissingParameter < StandardError
     def initialize(param)
       super "Missing parameter #{param.inspect}!"

@@ -23,6 +23,17 @@ describe "Rainman Exceptions" do
     end
   end
 
+  describe "NoHandler" do
+    it "raises with message" do
+      expect do
+        raise Rainman::NoHandler
+      end.to raise_error(
+        Rainman::NoHandler,
+        /No handler is set! Maybe you need to call 'set_default_handler'\?/
+      )
+    end
+  end
+
   describe "MissingParameter" do
     it "raises with message" do
       expect do
