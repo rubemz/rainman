@@ -52,6 +52,8 @@ describe "Rainman::Driver" do
         def self.validations; { :global => Rainman::Option.new(:global) }; end
       end
       @handler = @klass.new
+      runner = Rainman::Driver::Runner.new(@handler)
+      @handler.stub(:runner).and_return(runner)
       @module.stub(:current_handler_instance).and_return(@handler)
     end
 
@@ -213,10 +215,10 @@ describe "Rainman::Driver" do
       @module.should respond_to(:blah)
 
       klass = Class.new.new
-      @module.stub(:current_handler_instance).and_return(klass)
       runner = Rainman::Driver::Runner.new(klass)
-      Rainman::Driver::Runner.should_receive(:new).with(klass).and_return(runner)
-      runner.should_receive(:send)
+      klass.stub(:runner).and_return(runner)
+      @module.stub(:current_handler_instance).and_return(klass)
+      runner.should_receive(:send).with(:blah)
 
       @module.blah
     end

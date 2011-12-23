@@ -62,7 +62,7 @@ module Rainman
 
       begin
         set_current_handler name
-        Runner.new(current_handler_instance).tap do |runner|
+        current_handler_instance.runner.tap do |runner|
           return yield runner if block_given?
         end
       ensure
@@ -111,6 +111,16 @@ module Rainman
       # Returns a Symbol.
       def handler_name
         @handler_name
+      end
+
+      module InstanceMethods
+        def runner
+          @runner ||= Runner.new(self)
+        end
+      end
+
+      def self.extended(base)
+        base.send(:include, InstanceMethods)
       end
     end
 
@@ -231,8 +241,7 @@ module Rainman
       yield config[name] if block_given?
 
       create_method(name) do |*args, &block|
-        runner = Runner.new(current_handler_instance)
-        runner.send(name, *args, &block)
+        current_handler_instance.runner.send(name, *args, &block)
       end
     end
 
