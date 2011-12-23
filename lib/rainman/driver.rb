@@ -143,7 +143,7 @@ module Rainman
     # included in another class. It sets up delegation so that the including
     # class can access a Driver's singleton methods as instance methods.
     #
-    # base - The Module/Class that included this module
+    # base - The Module/Class that included this module.
     #
     # Example
     #
@@ -204,9 +204,9 @@ module Rainman
 
     # Private: Register a handler for use with the current Driver
     #
-    # name - The Symbol handler name
+    # name - The Symbol handler name.
     # opts - A Hash containing optional arguments:
-    #        :class_name - The class name to use
+    #        :class_name - The class name to use.
     #
     # Examples
     #
@@ -235,8 +235,8 @@ module Rainman
 
     # Private: Define a new action
     #
-    # name - The Symbol handler name
-    # opts - Options (unused currently)
+    # name - The Symbol handler name.
+    # opts - Options (unused currently).
     #
     # Example
     #
@@ -255,10 +255,10 @@ module Rainman
       end
     end
 
-    # Private: Create a new namespace
+    # Private: Create a new namespace.
     #
-    # name - The Symbol handler name
-    # args - Arguments (unused currently)
+    # name - The Symbol handler name.
+    # args - Arguments (unused currently).
     #
     # Yields the handler class config if a block is given.
     #

@@ -14,7 +14,7 @@ module Rainman
 
       # Public: Initialize a runner.
       #
-      # handler - A handler Class instance
+      # handler - A handler Class instance.
       #
       # Examples
       #
@@ -39,9 +39,9 @@ module Rainman
 
       # Public: Delegates the given method to the handler.
       #
-      # method - The method to send to the handler
-      # args   - Arguments to be supplied to the method (optional)
-      # block  - Block to be supplied to the method (optional)
+      # method - The method to send to the handler.
+      # args   - Arguments to be supplied to the method (optional).
+      # block  - Block to be supplied to the method (optional).
       #
       # Examples
       #
@@ -61,11 +61,11 @@ module Rainman
         handler.send(method, *args, &block)
       end
 
-      # Public: Method missing hook used to proxy methods to a handler.
+      # Internal: Method missing hook used to proxy methods to a handler.
       #
-      # method - The missing method name
-      # args   - Arguments to be supplied to the method (optional)
-      # block  - Block to be supplied to the method (optional)
+      # method - The missing method name.
+      # args   - Arguments to be supplied to the method (optional).
+      # block  - Block to be supplied to the method (optional).
       #
       # Raises NameError if handler does not respond to method.
       #

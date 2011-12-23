@@ -73,6 +73,13 @@ module Rainman
     end
 
     # Internal: Used to allow lookup/assignment of variables from @hash.
+    #
+    # method - The missing method name.
+    # args   - Arguments to be supplied to the method (optional).
+    #
+    # Raises NameError if trying to assign with `=`, (eg: stash.name = :foo).
+    #
+    # Returns the value being set/retrieved.
     def method_missing(method, *args)
       if method.to_s[-1, 1] == '='
         super
