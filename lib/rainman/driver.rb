@@ -208,6 +208,9 @@ module Rainman
 
     # Private: Register a handler for use with the current Driver.
     #
+    # If a block is given it is evaluated within the context of the handler
+    # Class.
+    #
     # name - The Symbol handler name.
     # opts - A Hash containing optional arguments:
     #        :class_name - The class name to use.
@@ -216,10 +219,12 @@ module Rainman
     #
     #   register_handler :bob
     #
-    # Yields the handler class config if a block is given.
+    #   register_handler :pop do
+    #     config[:username] = 'username'
+    #   end
     #
     # Returns the handler Class.
-    def register_handler(name, opts = {})
+    def register_handler(name, opts = {}, &block)
       opts.reverse_merge!(
         :class_name => "#{self.name}::#{name.to_s.camelize}"
       )
@@ -232,7 +237,7 @@ module Rainman
       klass_config = config[name.to_sym] = {}
       klass.instance_variable_set(:@config, klass_config)
 
-      yield klass_config if block_given?
+      klass.instance_eval(&block) if block_given?
 
       handlers[name] = klass
     end

@@ -208,6 +208,12 @@ describe "Rainman::Driver" do
       @bob.stub(:config).and_return({})
       @module.send(:register_handler, :bob)
     end
+
+    it "evaluates a block if given" do
+      blk = lambda { }
+      @bob.should_receive(:instance_eval).with(&blk)
+      @module.send(:register_handler, :bob, &blk)
+    end
   end
 
   describe "#define_action" do
