@@ -254,4 +254,36 @@ describe "Rainman::Driver" do
       @module.blah.should == :hi
     end
   end
+
+  describe "#inject_handler_methods" do
+    before do
+      @bob = Class.new do
+        def self.name; 'Bob'; end
+      end
+      @module.const_set(:Bob, @bob)
+    end
+
+    it "extends HandlerMethods" do
+      @bob.should_receive(:extend).with(Rainman::Driver::HandlerMethods)
+      @module.send(:inject_handler_methods, @bob, :bob)
+    end
+
+    it "sets @handler_name class var" do
+      @module.send(:inject_handler_methods, @bob, :bob)
+      @bob.handler_name.should == :bob
+    end
+
+    it "sets @config class var" do
+      config = { blah: :one }
+      @module.send(:inject_handler_methods, @bob, :bob, config)
+      @bob.config.should eq(config)
+      @module.config[:bob].should eq(config)
+    end
+
+    it "instance_evals block" do
+      @module.send(:inject_handler_methods, @bob, :bob) do
+        name.should == "Bob"
+      end
+    end
+  end
 end

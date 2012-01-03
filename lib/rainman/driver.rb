@@ -231,15 +231,7 @@ module Rainman
 
       klass = opts[:class_name].constantize
 
-      klass.extend(HandlerMethods)
-      klass.instance_variable_set(:@handler_name, name.to_sym)
-
-      klass_config = config[name.to_sym] = {}
-      klass.instance_variable_set(:@config, klass_config)
-
-      klass.instance_eval(&block) if block_given?
-
-      handlers[name] = klass
+      handlers[name] = inject_handler_methods(klass, name.to_sym, &block)
     end
 
     # Private: Define a new action.
@@ -313,6 +305,27 @@ module Rainman
       else
         define_method(method, *args, &block)
       end
+    end
+
+    # Private: Injects HandlerMethods into the given class/module.
+    #
+    # base           - The base Class/Module.
+    # handler_name   - The Symbol name of the handler class.
+    # handler_config - Optional config Hash.
+    # block          - Optional Proc that will be evaluated within the context
+    #                  of the base's singleton class.
+    #
+    # Example
+    #
+    #   inject_handler_methods(SomeHandler, :some_handler)
+    #
+    # Returns base Class/Module.
+    def inject_handler_methods(base, handler_name, handler_config = {}, &block)
+      base.extend(HandlerMethods)
+      base.instance_variable_set(:@handler_name, handler_name)
+      config[handler_name] = base.instance_variable_set(:@config, handler_config)
+      base.instance_eval(&block) if block_given?
+      base
     end
   end
 end
