@@ -139,6 +139,7 @@ module Rainman
       def self.extended(base)
         base.send(:include, InstanceMethods)
       end
+
     end
 
     private
@@ -259,29 +260,32 @@ module Rainman
     # Private: Create a new namespace.
     #
     # name - The Symbol handler name.
-    # args - Arguments (unused currently).
+    # opts - Arguments (unused currently).
     #
     # Yields the handler class config if a block is given.
     #
     # Returns a Proc.
-    def namespace(name, *args, &block)
-      # config[name] = args
+    def namespace(name, opts = {}, &block)
+      klass_config = config[name] = opts
 
-      # define_method(name) do
-      #   name = __method__.to_s
-      #   key = "@#{name}"
+      create_method(name) do
+        name = __method__.to_sym
+        key  = "@#{name}"
 
-      #   unless ivar = instance_variable_get(key)
-      #     ivar = instance_variable_set(key, {})
-      #   end
+        if instance_variable_defined?(key)
+          ns = instance_variable_get(key)
+        else
+          ns = instance_variable_set(key, {})
+        end
 
-      #   klass = current_handler_class.const_get(name.camelize)
-      #   puts "Config: #{current_handler_class.config}"
-      #   klass.extend(DSL)
+        unless ns[name]
+          klass = current_handler_instance.class.const_get(name.to_s.camelize)
 
-      #   ivar[current_handler] ||= klass.new
-      #   ivar[current_handler]
-      # end
+          ns[current_handler] = inject_handler_methods(klass, name, opts).new
+        end
+
+        ns[current_handler].runner
+      end
     end
 
     # Private: Creates a new method.
