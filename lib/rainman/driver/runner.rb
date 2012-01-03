@@ -27,7 +27,7 @@ module Rainman
       #
       # Returns a Symbol.
       def name
-        @handler.class.handler_name
+        handler.class.handler_name
       end
 
       # Public: Validations to run when a handler's methods are executed.
