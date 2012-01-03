@@ -246,7 +246,7 @@ module Rainman
     #   end
     #
     # Returns a Proc.
-    def define_action(name, *opts)
+    def define_action(name, opts = {})
       config[name] = {}
 
       yield config[name] if block_given?
