@@ -12,5 +12,5 @@ task :default => :spec
 
 desc "Open an irb session preloaded with this library"
 task :console do
-  sh "irb -rubygems -r ./lib/rainman.rb -I ./lib"
+  sh "irb -rubygems -r ./lib/rainman.rb -I ./lib -r ./example/domain.rb"
 end
