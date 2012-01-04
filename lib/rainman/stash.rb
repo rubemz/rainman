@@ -64,7 +64,10 @@ module Rainman
     #
     # Returns the value being set or nil if the value was cleared.
     def []=(key, values)
+      # Wrap values in []. This is needed for ruby 1.8 support
+      # because some objects do not respond to size.
       values = Array.wrap(values) unless values.respond_to?(:size)
+
       if values.size == 1 && values[0].nil?
         @hash.delete(key)
         nil
