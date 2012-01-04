@@ -66,14 +66,14 @@ describe "Rainman::Driver" do
       @module.should_receive(:set_current_handler).with(:blah)
       @module.should_receive(:set_current_handler).with(old_handler)
       @module.stub(:current_handler).and_return(old_handler)
-      @module.with_handler(:blah)
+      @module.with_handler(:blah) {}
     end
 
-    it "returns a Runner" do
-      @module.with_handler(:blah).should be_a(Rainman::Driver::Runner)
+    it "should raise an error without a block" do
+      expect { @module.with_handler(:blah) }.to raise_error
     end
 
-    it "yields the runner if passed a block" do
+    it "yields the runner" do
       res = @module.with_handler :blah do |runner|
         runner.should be_a(Rainman::Driver::Runner)
         runner.hi
@@ -153,6 +153,8 @@ describe "Rainman::Driver" do
     it "sets @current_handler" do
       @module.send(:set_current_handler, :blah)
       @module.instance_variable_get(:@current_handler).should == :blah
+      @module.send(:set_current_handler, :other)
+      @module.instance_variable_get(:@current_handler).should == :other
     end
   end
 
@@ -326,7 +328,6 @@ describe "Rainman::Driver" do
     it "uses the right handler" do
       [:abc, :xyz].each do |h|
         expected = "MissDaisy::#{h.to_s.capitalize}::Bob"
-        @module.with_handler(h).bob.hi.should == expected
         @module.with_handler(h) do |handler|
           handler.bob.hi.should == expected
         end

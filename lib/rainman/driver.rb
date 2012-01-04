@@ -51,15 +51,13 @@ module Rainman
       end
     end
 
-    # Public: Temporarily change a Driver's current handler. If a block is
-    # supplied, it will be evaluated. This is useful to perform actions using
-    # multiple handlers without changing defaults.
+    # Public: Temporarily change a Driver's current handler. The handler is
+    # changed for the duration of the block supplied. This is useful to perform
+    # actions using multiple handlers without changing defaults.
     #
     # name - The Symbol name of the handler to use.
     #
-    # Examples
-    #
-    #   with_handler(:enom).transfer
+    # Example
     #
     #   with_handler(:enom) do |handler|
     #     handler.transfer
@@ -68,14 +66,14 @@ module Rainman
     # Yields a Runner instance if a block is given.
     #
     # Returns a Runner instance or the result of a block.
-    def with_handler(name)
+    def with_handler(name, &block)
+      raise "with_handler requires a block" unless block_given?
+
       old_handler = current_handler
 
       begin
         set_current_handler name
-        current_handler_instance.runner.tap do |runner|
-          return yield runner if block_given?
-        end
+        yield current_handler_instance.runner
       ensure
         set_current_handler old_handler
       end
