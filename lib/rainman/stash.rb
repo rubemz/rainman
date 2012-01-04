@@ -64,6 +64,7 @@ module Rainman
     #
     # Returns the value being set or nil if the value was cleared.
     def []=(key, values)
+      values = Array.wrap(values) unless values.respond_to?(:size)
       if values.size == 1 && values[0].nil?
         @hash.delete(key)
         nil

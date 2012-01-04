@@ -165,7 +165,7 @@ describe "Rainman::Driver" do
     end
 
     it "returns the handler instance" do
-      @module.send(:handler_instances).merge!(abc: @klass)
+      @module.send(:handler_instances).merge!(:abc => @klass)
       @module.send(:current_handler_instance).should == @klass
     end
 
@@ -274,7 +274,7 @@ describe "Rainman::Driver" do
     end
 
     it "sets @config class var" do
-      config = { blah: :one }
+      config = { :blah => :one }
       @module.send(:inject_handler_methods, @bob, :bob, config)
       @bob.config.should eq(config)
       @module.config[:bob].should eq(config)

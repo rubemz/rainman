@@ -1,14 +1,14 @@
 require 'spec_helper'
 
 describe Rainman::Stash do
-  subject { Rainman::Stash.new(food: 'pizza') }
+  subject { Rainman::Stash.new(:food => 'pizza') }
 
   it "returns @hash with #to_hash" do
     subject.to_hash.should eq(subject.instance_variable_get(:@hash))
   end
 
   it "allows assignment at initialization" do
-    subject.to_hash.should == { food: 'pizza' }
+    subject.to_hash.should == { :food => 'pizza' }
   end
 
   it "allows assignment of arbitrary variables" do
