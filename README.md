@@ -164,7 +164,8 @@ Domain.with_handler(:abc) do |driver|
   driver.create
 end
 
-Domain.with_handler(:xyz).create
+Domain.set_current_handler :xyz
+Domain.create
 ```
 
 ### Including drivers in other classes
@@ -189,7 +190,8 @@ s.with_handler(:abc) do |driver|
   driver.create
 end
 
-s.with_handler(:zyz).create
+s.set_current_handler :zyz
+s.create
 ```
 
 ## Note on Patches/Pull Requests
