@@ -285,7 +285,7 @@ module Rainman
           ns = instance_variable_set(key, {})
         end
 
-        unless ns[name]
+        unless ns[current_handler]
           klass = current_handler_instance.class.const_get(name.to_s.camelize)
 
           ns[current_handler] = inject_handler_methods(klass, name, opts).new

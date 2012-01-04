@@ -286,4 +286,52 @@ describe "Rainman::Driver" do
       end
     end
   end
+
+  describe "#namespace" do
+    def create_ns_class(name, base)
+      klass = Class.new do
+        def hi; self.class.handler_name; end
+        def self.handler_name; name; end
+        def self.validations; { :global => Rainman::Option.new(:global) }; end
+      end
+
+      set_const(base, name.to_s.camelize.to_sym, klass)
+    end
+
+    def set_const(base, name, const)
+      base.send(:remove_const, name) if base.const_defined?(name)
+      base.const_set(name, const)
+    end
+
+    before do
+      create_ns_class :abc, @module
+      create_ns_class :xyz, @module
+      create_ns_class :bob, @module::Abc
+      create_ns_class :bob, @module::Xyz
+
+      @module.send(:register_handler, :abc)
+      @module.send(:register_handler, :xyz)
+      @module.set_default_handler :abc
+      @module.send(:namespace, :bob)
+    end
+
+    it "creates a method for the namespace" do
+      @module.should respond_to(:bob)
+    end
+
+    it "returns a Runner" do
+      @module.bob.should be_a(Rainman::Driver::Runner)
+    end
+
+    it "uses the right handler" do
+      [:abc, :xyz].each do |h|
+        expected = "MissDaisy::#{h.to_s.capitalize}::Bob"
+        @module.with_handler(h).bob.hi.should == expected
+        @module.with_handler(h) do |handler|
+          handler.bob.hi.should == expected
+        end
+      end
+    end
+
+  end
 end
