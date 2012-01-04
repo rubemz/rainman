@@ -122,6 +122,13 @@ module Rainman
         @handler_name
       end
 
+      # Public: Get the the handler's parent_klass.
+      #
+      # Returns Rainman::Driver.self
+      def parent_klass
+        @parent_klass
+      end
+
       # These instance methods are available to handler instances.
       module InstanceMethods
         # Public: A Runner is automatically available to handler instances.
@@ -327,6 +334,7 @@ module Rainman
     def inject_handler_methods(base, handler_name, handler_config = {}, &block)
       base.extend(HandlerMethods)
       base.instance_variable_set(:@handler_name, handler_name)
+      base.instance_variable_set(:@parent_klass, self)
       config[handler_name] = base.instance_variable_set(:@config, handler_config)
       base.instance_eval(&block) if block_given?
       base

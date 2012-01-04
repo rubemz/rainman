@@ -37,28 +37,36 @@ module Rainman
         handler.class.validations
       end
 
+      # Public: Get the handler's parent_klass
+      #
+      # Returns Rainman::Driver.self
+      def parent_klass
+        handler.class.parent_klass
+      end
+
       # Public: Delegates the given method to the handler.
       #
-      # method - The method to send to the handler.
-      # args   - Arguments to be supplied to the method (optional).
-      # block  - Block to be supplied to the method (optional).
+      # context - Set the context for the method (class/instance)
+      # method  - The method to send to the handler.
+      # args    - Arguments to be supplied to the method (optional).
+      # block   - Block to be supplied to the method (optional).
       #
       # Examples
       #
-      #   execute(:register)
-      #   execute(:register, { params: [] })
-      #   execute(:register, :one, :argument) do
+      #   execute(handler, :register)
+      #   execute(handler.parent_class, :register, { params: [] })
+      #   execute(handler, :register, :one, :argument) do
       #     # some code
       #   end
       #
       # Raises MissingParameter if validation fails due to missing parameters.
       #
       # Returns the result of the handler action.
-      def execute(method, *args, &block)
+      def execute(context, method, *args, &block)
         validations[:global].validate!(*args) if validations.has_key?(:global)
         validations[name].validate!(*args) if validations.has_key?(name)
 
-        handler.send(method, *args, &block)
+        context.send(method, *args, &block)
       end
 
       # Internal: Method missing hook used to proxy methods to a handler.
@@ -72,7 +80,9 @@ module Rainman
       # Returns the value of execute.
       def method_missing(method, *args, &block)
         if handler.respond_to?(method)
-          execute(method, *args, &block)
+          execute(handler, method, *args, &block)
+        elsif parent_klass.respond_to?(method)
+          execute(parent_klass, method, *args, &block)
         else
           super
         end

@@ -23,14 +23,14 @@ describe Rainman::Driver::Runner do
   describe "#execute" do
     it "should validate globally" do
       validations[:global].should_receive(:validate!).with(1)
-      subject.execute(:hello, 1)
+      subject.execute(@handler, :hello, 1)
     end
 
     it "should validate locally" do
       validations.merge!(name => Rainman::Option.new(name))
       validations[:global].should_receive(:validate!).with(1)
       validations[name].should_receive(:validate!)
-      subject.execute(:hello, 1)
+      subject.execute(@handler, :hello, 1)
     end
   end
 
