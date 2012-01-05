@@ -51,22 +51,23 @@ module Rainman
     # Public: Sets value on @hash.
     #
     # key    - The Symbol key to add to @hash.
-    # values - An Array (splat) of values to assign.
+    # values - One or more values to assign.
     #
     # Examples
     #
     #   stash = Stash.new
-    #   stash[:name] = 'ABC'
-    #   stash.name #=> 'ABC'
+    #   stash[:name] = 'ABC Guy'
+    #   stash.name #=> 'ABC Guy'
+    #
+    #   stash[:initials] = 'A', 'G'
+    #   stash.initials #=> ['A', 'G']
     #
     #   stash[:name] = nil
     #   stash.name #=> nil
     #
     # Returns the value being set or nil if the value was cleared.
     def []=(key, values)
-      # Wrap values in []. This is needed for ruby 1.8 support
-      # because some objects do not respond to size.
-      values = Array.wrap(values) unless values.respond_to?(:size)
+      values = Array.wrap(values)
 
       if values.size == 1 && values[0].nil?
         @hash.delete(key)
