@@ -1,6 +1,5 @@
 require "rainman/version"
 require "rainman/exceptions"
-require "rainman/stash"
 require "rainman/option"
 require "rainman/driver"
 require "rainman/handler"
