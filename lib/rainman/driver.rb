@@ -67,7 +67,7 @@ module Rainman
     #
     # Returns a Runner instance or the result of a block.
     def with_handler(name, &block)
-      raise Rainman::MissingParameter, "with_handler requires a block" unless block_given?
+      raise MissingBlock, :with_handler unless block_given?
 
       old_handler = current_handler
 

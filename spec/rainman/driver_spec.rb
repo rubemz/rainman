@@ -70,7 +70,7 @@ describe "Rainman::Driver" do
     end
 
     it "should raise an error without a block" do
-      expect { @module.with_handler(:blah) }.to raise_error(Rainman::MissingParameter)
+      expect { @module.with_handler(:blah) }.to raise_error(Rainman::MissingBlock)
     end
 
     it "yields the runner" do

@@ -32,4 +32,12 @@ module Rainman
       super "Missing parameter #{param.inspect}!"
     end
   end
+
+  # MissingBlock is raised when trying to run an action that is missing a
+  # required block parameter.
+  class MissingBlock < LocalJumpError
+    def initialize(method)
+      super "Can't call #{method.inspect} without a block!"
+    end
+  end
 end
