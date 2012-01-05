@@ -32,30 +32,38 @@ module Domain
   extend Rainman::Driver
 
   # Set global configuration variables you need to access across all handlers.
-  config.username   'username'
-  config.user_agent 'SuperAwesome Domain Manager'
+  config[:username]   = 'username'
+  config[:user_agent] = 'SuperAwesome Domain Manager'
 
   # Register Domain::Abc as a handler. An optional block yields a config hash
   # which can be used to store variables needed by the handler class, in this
   # case a username and password specific for Domain::Abc.
   register_handler :abc do
-    config.username 'username'
-    config.password 'pass'
+    config[:username] = 'username'
+    config[:password] = 'pass'
   end
 
   # Register Domain::Xyz as a handler.
   register_handler :xyz do
-    config.username 'username'
-    config.password 'pass'
+    config[:username] = 'username'
+    config[:password] = 'pass'
 
-    validate :username
+    # Specify a required parameter
+    #
+    # When defined in a handler, parameters cascade down to all of its
+    # actions.
+    param :username, :required => true
   end
 
   # Register Domain.create as a public method. An optional block yields a
   # config hash that can be used to specify validations to be run before the
   # method is invoked.
   define_action :create do
-    validate :username
+    # Specify an optional parameter
+    #
+    # We required username above for Xyz. This will make that parameter
+    # optional when Xyz's `create` method is called.
+    param :username, :required => false
   end
 
   # Register Domain.destroy as a public method
@@ -104,9 +112,11 @@ class Domain::Xyz
 end
 ```
 
-Handler classes automatically have `config` and `validation` class methods
-available. These are hashes that contain configs/validations specific to the
-handler.
+Handler classes automatically have `config` and `params` class methods
+available. These are hashes that contain configs/params specific to the
+handler. The config hash is meant to store things like usernames, passwords,
+etc, that would be used by a handler. The params hash is to store parameters
+that must be set for a handler to perform a valid request.
 
 The example driver above also defined `nameservers` namespace with a `list`
 action (eg: `Domain.nameservers.list`). To implement this, a Nameservers class
@@ -157,16 +167,30 @@ Domain.nameservers.list({})
 ### Changing handlers
 
 It is possible to change the handler used at runtime using the `with_handler`
-method. The two examples below are identical:
+method. This method temporarily changes the current handler. This means, if
+you have a default handler set, and use `with_handler`, that default handler
+is preserved.
 
 ```ruby
 Domain.with_handler(:abc) do |driver|
+  # Here, current_handler is now set to :abc
   driver.create
 end
-
-Domain.set_current_handler :xyz
-Domain.create
 ```
+
+You can also change the current handler for the duration of your code/session.
+
+```ruby
+Domain.set_current_handler :xyz
+Domain.create # create an :xyz domain
+
+Domain.set_current_handler :abc
+Domain.create   # create an :abc domain
+Domain.transfer # transfer an :abc domain
+```
+
+It is highly suggested you stick to using `with_handler` unless you have a
+reason.
 
 ### Including drivers in other classes
 
