@@ -96,36 +96,6 @@ describe "Rainman::Driver" do
     end
   end
 
-  describe "HandlerMethods" do
-    before do
-      @class = Class.new do
-        extend Rainman::Driver::HandlerMethods
-      end
-      @module.config[:blah] = {}
-      @class.instance_variable_set(:@config, @module.config[:blah])
-      @class.instance_variable_set(:@handler_name, :blah)
-    end
-
-    describe "#config" do
-      it "returns the config" do
-        @class.config.should eq @module.config[:blah]
-      end
-    end
-
-    describe "#validations" do
-      it "returns the validations" do
-        @class.validations.should eq @module.config[:blah][:validations]
-      end
-    end
-
-    describe "#handler_name" do
-      it "returns @handler_name" do
-        @class.handler_name.should == :blah
-        @class.handler_name.should eq @class.instance_variable_get(:@handler_name)
-      end
-    end
-  end
-
   describe "#included" do
     it "extends base with Forwardable" do
       klass = Class.new
@@ -206,7 +176,7 @@ describe "Rainman::Driver" do
     end
 
     it "extends handler with handler methods" do
-      @bob.should_receive(:extend).with(Rainman::Driver::HandlerMethods)
+      @bob.should_receive(:extend).with(Rainman::Handler)
       @bob.stub(:config).and_return({})
       @module.send(:register_handler, :bob)
     end
@@ -265,8 +235,8 @@ describe "Rainman::Driver" do
       @module.const_set(:Bob, @bob)
     end
 
-    it "extends HandlerMethods" do
-      @bob.should_receive(:extend).with(Rainman::Driver::HandlerMethods)
+    it "extends Handler" do
+      @bob.should_receive(:extend).with(Rainman::Handler)
       @module.send(:inject_handler_methods, @bob, :bob)
     end
 

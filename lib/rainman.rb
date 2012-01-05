@@ -1,8 +1,8 @@
 require "rainman/version"
 require "rainman/exceptions"
 require "rainman/option"
-require "rainman/driver"
 require "rainman/handler"
+require "rainman/driver"
 
 module Rainman
   extend self

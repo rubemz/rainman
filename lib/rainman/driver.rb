@@ -96,57 +96,6 @@ module Rainman
       @default_handler
     end
 
-    # HandlerMethods are added to handler classes at runtime. They are
-    # available as class methods.
-    module HandlerMethods
-      # Public: Alias for the Config hash.
-      #
-      # Returns the Rainman::Driver::Config Hash singleton.
-      def config
-        @config
-      end
-
-      # Public: Alias for the Validations hash.
-      #
-      # Returns the Rainman::Driver::Validations Hash singleton.
-      def validations
-        config[:validations] ||= {}
-      end
-
-      # Public: The name of this handler.
-      #
-      # Returns a Symbol.
-      def handler_name
-        @handler_name
-      end
-
-      # Public: Get the the handler's parent_klass.
-      #
-      # Returns Rainman::Driver.self
-      def parent_klass
-        @parent_klass
-      end
-
-      # These instance methods are available to handler instances.
-      module InstanceMethods
-        # Public: A Runner is automatically available to handler instances.
-        #
-        # Returns a Rainman::Runner.
-        def runner
-          @runner ||= Runner.new(self)
-        end
-      end
-
-      # Public: Extended hook; this adds the InstanceMethods module to handler
-      # classes.
-      #
-      # base - The Module/Class that was extended with this module.
-      def self.extended(base)
-        base.send(:include, InstanceMethods)
-      end
-
-    end
-
     private
 
     # Private: Included hook; this is invoked when a Driver module is
@@ -316,7 +265,7 @@ module Rainman
       end
     end
 
-    # Private: Injects HandlerMethods into the given class/module.
+    # Private: Injects Handler methods into the given class/module.
     #
     # base           - The base Class/Module.
     # handler_name   - The Symbol name of the handler class.
@@ -330,7 +279,7 @@ module Rainman
     #
     # Returns base Class/Module.
     def inject_handler_methods(base, handler_name, handler_config = {}, &block)
-      base.extend(HandlerMethods)
+      base.extend(Handler)
       base.instance_variable_set(:@handler_name, handler_name)
       base.instance_variable_set(:@parent_klass, self)
       config[handler_name] = base.instance_variable_set(:@config, handler_config)
