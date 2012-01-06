@@ -26,5 +26,3 @@ module Domain
 
   set_default_handler :opensrs
 end
-
-p Domain.with_handler(:enom).nameservers.list
