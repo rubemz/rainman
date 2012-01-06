@@ -1,4 +1,3 @@
-require "rainman/driver/runner"
 require "forwardable"
 require "active_support/core_ext/string"
 require "active_support/core_ext/array"

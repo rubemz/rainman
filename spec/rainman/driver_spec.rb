@@ -56,7 +56,7 @@ describe "Rainman::Driver" do
         def self.validations; { :global => Rainman::Option.new(:global) }; end
       end
       @handler = @klass.new
-      runner = Rainman::Driver::Runner.new(@handler)
+      runner = Rainman::Runner.new(@handler)
       @handler.stub(:runner).and_return(runner)
       @module.stub(:current_handler_instance).and_return(@handler)
     end
@@ -75,7 +75,7 @@ describe "Rainman::Driver" do
 
     it "yields the runner" do
       res = @module.with_handler :blah do |runner|
-        runner.should be_a(Rainman::Driver::Runner)
+        runner.should be_a(Rainman::Runner)
         runner.hi
       end
       res.should == :hi_handler!
@@ -199,7 +199,7 @@ describe "Rainman::Driver" do
       @module.should respond_to(:blah)
 
       klass = Class.new.new
-      runner = Rainman::Driver::Runner.new(klass)
+      runner = Rainman::Runner.new(klass)
       klass.stub(:runner).and_return(runner)
       @module.stub(:current_handler_instance).and_return(klass)
       runner.should_receive(:send).with(:blah)
@@ -292,7 +292,7 @@ describe "Rainman::Driver" do
     end
 
     it "returns a Runner" do
-      @module.bob.should be_a(Rainman::Driver::Runner)
+      @module.bob.should be_a(Rainman::Runner)
     end
 
     it "uses the right handler" do

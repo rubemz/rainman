@@ -36,7 +36,7 @@ module Rainman
       #
       # Returns a Rainman::Runner.
       def runner
-        @runner ||= Rainman::Driver::Runner.new(self)
+        @runner ||= Rainman::Runner.new(self)
       end
     end
 
