@@ -28,12 +28,6 @@ describe Rainman::Handler do
     end
   end
 
-  describe "#validations" do
-    it "returns the validations" do
-      @class.validations.should eq @module.config[:blah][:validations]
-    end
-  end
-
   describe "#handler_name" do
     it "returns @handler_name" do
       @class.handler_name.should == :blah

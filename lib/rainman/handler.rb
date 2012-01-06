@@ -9,13 +9,6 @@ module Rainman
       @config
     end
 
-    # Public: Alias for the Validations hash.
-    #
-    # Returns the Rainman::Driver::Validations Hash singleton.
-    def validations
-      config[:validations] ||= {}
-    end
-
     # Public: The name of this handler.
     #
     # Returns a Symbol.

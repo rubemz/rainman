@@ -53,7 +53,6 @@ describe "Rainman::Driver" do
       @klass = Class.new do
         def hi; :hi_handler!; end
         def self.handler_name; :blah; end
-        def self.validations; { :global => Rainman::Option.new(:global) }; end
       end
       @handler = @klass.new
       runner = Rainman::Runner.new(@handler)
