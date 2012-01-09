@@ -6,7 +6,7 @@ describe "Rainman Exceptions" do
     describe "#{klass.to_s}" do
       it "raises with message" do
         const = Rainman.const_get(klass)
-        args  = opts[:args]
+        args  = opts[:args] || []
         mesg  = opts[:message]
         expect { raise const, *args }.to raise_error(const, mesg)
       end
