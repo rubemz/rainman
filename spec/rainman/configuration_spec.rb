@@ -3,15 +3,15 @@ require 'spec_helper'
 describe Rainman::Configuration do
   subject { Rainman::Configuration.new(:global) }
 
-  it "delegates #global to self.class.global" do
-    subject.global.should eq(subject.class.global)
+  it "delegates #global to self.class.data" do
+    subject.data.should eq(subject.class.data)
   end
 
-  it "stores keys in self.class.global[name]" do
+  it "stores keys in self.class.data[name]" do
     subject[:blah] = :one
-    subject.class.global.should have_key(:global)
-    subject.class.global[:global].should have_key(:blah)
-    subject.class.global[:global][:blah].should == :one
+    subject.class.data.should have_key(:global)
+    subject.class.data[:global].should have_key(:blah)
+    subject.class.data[:global][:blah].should == :one
   end
 
   it "retrieves a global key when a local key does not exist" do

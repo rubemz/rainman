@@ -26,7 +26,7 @@ module Rainman
     #
     # Returns a Hash.
     def config
-      @config ||= Configuration.global
+      @config ||= Configuration.data
     end
 
     # Public: Registered handlers.

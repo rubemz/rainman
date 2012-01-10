@@ -5,22 +5,22 @@ module Rainman
     # Public: A Hash that stores all configurations.
     #
     # Returns a Hash.
-    def self.global
-      @global ||= {}
+    def self.data
+      @data ||= {}
     end
 
     # Public: Initialize a new instance of this class, and sets a new namespace
-    # on the global Hash.
+    # on the data Hash.
     def initialize(name)
       @name = name
-      self.class.global[name] = {}
+      self.class.data[name] = {}
     end
 
     # Public: Alias for the config data
     #
     # Returns a Hash.
-    def global
-      self.class.global
+    def data
+      self.class.data
     end
 
     # Public: Lookup a key
@@ -34,10 +34,10 @@ module Rainman
     #
     # Returns the value or nil.
     def [](key)
-      if global[@name] && global[@name].has_key?(key)
-        global[@name][key]
-      elsif global[:global] && global[:global].has_key?(key)
-        global[:global][key]
+      if data[@name] && data[@name].has_key?(key)
+        data[@name][key]
+      elsif data[:global] && data[:global].has_key?(key)
+        data[:global][key]
       end
     end
 
@@ -49,7 +49,7 @@ module Rainman
     #
     # Returns the value being set.
     def []=(key, value)
-      global[@name][key] = value
+      data[@name][key] = value
     end
   end
 end
