@@ -185,7 +185,7 @@ module Rainman
 
       klass = opts[:class_name].constantize
 
-      handlers[name] = inject_handler_methods(klass, name.to_sym, &block)
+      handlers[name] = inject_handler_methods(klass, name.to_sym, config.dup, &block)
     end
 
     # Private: Define a new action.
@@ -200,10 +200,8 @@ module Rainman
     #   end
     #
     # Returns a Proc.
-    def define_action(name, opts = {})
-      config[name] = {}
-
-      yield config[name] if block_given?
+    def define_action(name, opts = {}, &block)
+      instance_eval_value(:config, config.dup, &block)
 
       create_method(name) do |*args, &block|
         current_handler_instance.runner.send(name, *args, &block)
@@ -219,7 +217,8 @@ module Rainman
     #
     # Returns a Proc.
     def namespace(name, opts = {}, &block)
-      klass_config = config[name] = opts
+      # config_key = "#{self.name}##{name}"
+      # klass_config = config[config_key] = opts
 
       create_method(name) do
         name = __method__.to_sym
@@ -281,9 +280,29 @@ module Rainman
       base.extend(Handler)
       base.instance_variable_set(:@handler_name, handler_name)
       base.instance_variable_set(:@parent_klass, self)
-      config[handler_name] = base.instance_variable_set(:@config, handler_config)
-      base.instance_eval(&block) if block_given?
+      base.instance_variable_set(:@config, handler_config)
+      instance_eval_value(:config, handler_config, &block)
       base
+    end
+
+    # Private: Creates and instance_evals an anonymous class with key available
+    # as an instance method.
+    #
+    # Example
+    #
+    #   def blah(&block)
+    #     instance_eval_value(:name, 'Josh', &block)
+    #   end
+    #
+    #   blah do
+    #     name # in this context, name is == 'Josh'
+    #   end
+    def instance_eval_value(key, value, &block)
+      klass = Class.new
+      klass.send(:attr_reader, key)
+      klass_i = klass.new
+      klass_i.instance_variable_set("@#{key}", value)
+      klass_i.instance_eval(&block) if block_given?
     end
   end
 end

@@ -247,14 +247,13 @@ describe "Rainman::Driver" do
     it "sets @config class var" do
       config = { :blah => :one }
       @module.send(:inject_handler_methods, @bob, :bob, config)
-      @bob.config.should eq(config)
-      @module.config[:bob].should eq(config)
+      @bob.config.should == config
     end
 
     it "instance_evals block" do
-      @module.send(:inject_handler_methods, @bob, :bob) do
-        name.should == "Bob"
-      end
+      blk = lambda { }
+      @module.should_receive(:instance_eval_value).with(:config, {}, &blk)
+      @module.send(:inject_handler_methods, @bob, :bob, &blk)
     end
   end
 
@@ -302,6 +301,19 @@ describe "Rainman::Driver" do
         end
       end
     end
+  end
 
+  describe "#instance_eval_value" do
+    before do
+      @hash = {}
+      @module.send(:instance_eval_value, :config, @hash) do
+        config[:blah] = :one
+      end
+    end
+
+    it "evals block setting config" do
+      @hash.should have_key(:blah)
+      @hash[:blah].should == :one
+    end
   end
 end
