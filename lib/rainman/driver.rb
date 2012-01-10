@@ -95,6 +95,22 @@ module Rainman
       @default_handler
     end
 
+    # Public: Sets the current handler. Name should be an underscored symbol
+    # representing a class name in the current context.
+    #
+    # name - The Symbol name of the handler to use. Can be set to nil to
+    #        clear the current handler.
+    #
+    # Example
+    #
+    #   set_current_handler :my_handler #=> sets handler to MyHandler
+    #   set_current_handler nil         #=> clears handler
+    #
+    # Returns the Symbol name of the current handler or nothing.
+    def set_current_handler(name)
+      @current_handler = name
+    end
+
     private
 
     # Private: Included hook; this is invoked when a Driver module is
@@ -125,22 +141,6 @@ module Rainman
     # initialized.
     def handler_instances
       @handler_instances ||= {}
-    end
-
-    # Private: Sets the current handler. Name should be an underscored symbol
-    # representing a class name in the current context.
-    #
-    # name - The Symbol name of the handler to use. Can be set to nil to
-    #        clear the current handler.
-    #
-    # Example
-    #
-    #   set_current_handler :my_handler #=> sets handler to MyHandler
-    #   set_current_handler nil         #=> clears handler
-    #
-    # Returns the Symbol name of the current handler or nothing.
-    def set_current_handler(name)
-      @current_handler = name
     end
 
     # Private: Get or set an instance of the current handler class. This
