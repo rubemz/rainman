@@ -190,8 +190,6 @@ describe "Rainman::Driver" do
   end
 
   describe "#define_action" do
-    it "does something with the block"
-
     it "creates the method" do
       @module.should_not respond_to(:blah)
       @module.send(:define_action, :blah)
