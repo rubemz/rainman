@@ -21,14 +21,10 @@ module Domain
   register_handler :opensrs
 
   namespace :nameservers, :one => :two do
-    define_action :list do
-      config[:blah] = :ha
-    end
+    define_action :list
   end
 
-  define_action :list do
-    config[:blah] = :ha
-  end
+  define_action :list
 
   define_action :transfer
 

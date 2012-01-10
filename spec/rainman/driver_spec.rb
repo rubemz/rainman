@@ -44,7 +44,8 @@ describe "Rainman::Driver" do
 
   describe "#config" do
     it "returns an empty hash" do
-      @module.config.should == {}
+      @module.config.should be_a Hash
+      @module.config.should eq(@module.instance_variable_get(:@config))
     end
   end
 
@@ -184,7 +185,6 @@ describe "Rainman::Driver" do
       @module.send(:register_handler, :bob) do
         config[:test] = :omghi2u
       end
-      @bob.config.should have_key(:test)
       @bob.config[:test].should == :omghi2u
     end
   end
@@ -245,14 +245,13 @@ describe "Rainman::Driver" do
     end
 
     it "sets @config class var" do
-      config = { :blah => :one }
-      @module.send(:inject_handler_methods, @bob, :bob, config)
-      @bob.config.should == config
+      @module.send(:inject_handler_methods, @bob, :bob)
+      @bob.config.should eq(@bob.instance_variable_get(:@config))
     end
 
     it "instance_evals block" do
       blk = lambda { }
-      @module.should_receive(:instance_eval_value).with(:config, {}, &blk)
+      @module.should_receive(:instance_eval_value)
       @module.send(:inject_handler_methods, @bob, :bob, &blk)
     end
   end

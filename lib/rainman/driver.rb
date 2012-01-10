@@ -26,7 +26,7 @@ module Rainman
     #
     # Returns a Hash.
     def config
-      @config ||= {}
+      @config ||= Configuration.global
     end
 
     # Public: Registered handlers.
@@ -185,7 +185,7 @@ module Rainman
 
       klass = opts[:class_name].constantize
 
-      handlers[name] = inject_handler_methods(klass, name.to_sym, config.dup, &block)
+      handlers[name] = inject_handler_methods(klass, name.to_sym, &block)
     end
 
     # Private: Define a new action.
@@ -195,14 +195,10 @@ module Rainman
     #
     # Example
     #
-    #   define_action :blah do
-    #     # code to run
-    #   end
+    #   define_action :blah
     #
     # Returns a Proc.
-    def define_action(name, opts = {}, &block)
-      instance_eval_value(:config, config.dup, &block)
-
+    def define_action(name, opts = {})
       create_method(name) do |*args, &block|
         current_handler_instance.runner.send(name, *args, &block)
       end
@@ -233,7 +229,7 @@ module Rainman
         unless ns[current_handler]
           klass = current_handler_instance.class.const_get(name.to_s.camelize)
 
-          ns[current_handler] = inject_handler_methods(klass, name, opts).new
+          ns[current_handler] = inject_handler_methods(klass, name).new
         end
 
         ns[current_handler].runner
@@ -267,7 +263,6 @@ module Rainman
     #
     # base           - The base Class/Module.
     # handler_name   - The Symbol name of the handler class.
-    # handler_config - Optional config Hash.
     # block          - Optional Proc that will be evaluated within the context
     #                  of the base's singleton class.
     #
@@ -276,12 +271,12 @@ module Rainman
     #   inject_handler_methods(SomeHandler, :some_handler)
     #
     # Returns base Class/Module.
-    def inject_handler_methods(base, handler_name, handler_config = {}, &block)
+    def inject_handler_methods(base, handler_name, &block)
       base.extend(Handler)
       base.instance_variable_set(:@handler_name, handler_name)
       base.instance_variable_set(:@parent_klass, self)
-      base.instance_variable_set(:@config, handler_config)
-      instance_eval_value(:config, handler_config, &block)
+      conf = base.instance_variable_set(:@config, Configuration.new(handler_name))
+      instance_eval_value(:config, conf, &block)
       base
     end
 
