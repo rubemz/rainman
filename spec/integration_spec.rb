@@ -3,19 +3,19 @@ require File.expand_path('../../example/domain.rb', __FILE__)
 
 describe "Rainman integration" do
   describe Domain do
-    its(:handlers) do
-      should == {
-        :enom    => Domain::Enom,
-        :opensrs => Domain::Opensrs
-      }
+    describe "handlers" do
+      subject { Domain.handlers }
+
+      its([:enom])    { should == Domain::Enom }
+      its([:opensrs]) { should == Domain::Opensrs }
     end
 
-    its(:config) do
-      should == {
-        :user    => :global,
-        :enom    => { :user => :enom_user },
-        :opensrs => {}
-      }
+    describe "config" do
+      subject { Domain.config }
+
+      its([:user])    { should == :global }
+      its([:enom])    { should be_a Hash }
+      its([:opensrs]) { should be_a Hash }
     end
 
     its(:default_handler) { should == :opensrs }
