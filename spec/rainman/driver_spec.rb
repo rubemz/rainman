@@ -285,6 +285,16 @@ describe "Rainman::Driver" do
       end
     end
 
+    it "sets an instance variable" do
+      [:abc, :xyz].each do |name|
+        @module.with_handler(name) { |h| h.bob.hi }
+        ivar = @module.instance_variable_get(:@bob)
+        ivar.should be_a(Hash)
+        ivar.should have_key(name)
+        ivar[name].should be_a(Module)
+      end
+    end
+
     it "raises exception calling a method that isn't registered" do
       expect { @module.bob.bye }.to raise_error(NoMethodError)
     end
