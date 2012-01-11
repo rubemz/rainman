@@ -50,6 +50,13 @@ module Rainman
       end
     end
 
+    # Public: A list of the registered namespaces
+    #
+    # Returns an Array
+    def namespaces
+      @namespaces ||= []
+    end
+
     # Public: Temporarily change a Driver's current handler. The handler is
     # changed for the duration of the block supplied. This is useful to perform
     # actions using multiple handlers without changing defaults.
@@ -232,6 +239,30 @@ module Rainman
         end
 
         ns[current_handler]
+      end
+      namespaces << name
+    end
+
+    # Private: Creates a new method.
+    #
+    # method - The method name.
+    # args   - Arguments to be supplied to the method (optional).
+    # block  - Block to be supplied to the method (optional).
+    #
+    # Examples
+    #
+    #   create_method :blah do
+    #     # code to execute
+    #   end
+    #
+    # Raises Rainman::AlreadyImplemented if the method already exists.
+    #
+    # Returns a Proc.
+    def create_method(method, *args, &block)
+      if respond_to?(method)
+        raise AlreadyImplemented, method
+      else
+        define_method(method, *args, &block)
       end
     end
 
