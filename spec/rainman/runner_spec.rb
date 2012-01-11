@@ -45,4 +45,3 @@ describe Rainman::Runner do
     it { expect { subject.missing }.to raise_error(NoMethodError) }
   end
 end
-#raise Rainman::MissingHandlerMethod.new(:method => method, :class => name)
