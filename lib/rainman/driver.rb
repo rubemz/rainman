@@ -240,7 +240,7 @@ module Rainman
 
         ns[current_handler]
       end
-      namespaces << name
+      namespaces << name.to_sym
     end
 
     # Private: Creates a new method.
