@@ -240,7 +240,7 @@ module Rainman
         end
         ns[current_handler].runner
       end
-      namespaces << name
+      namespaces << name.to_sym
     end
 
     # Private: Creates a new method.
