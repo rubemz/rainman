@@ -31,39 +31,18 @@ require 'rainman'
 module Domain
   extend Rainman::Driver
 
-  # Set global configuration variables you need to access across all handlers.
-  config[:username]   = 'username'
-  config[:user_agent] = 'SuperAwesome Domain Manager'
-
   # Register Domain::Abc as a handler. An optional block yields a config hash
   # which can be used to store variables needed by the handler class, in this
   # case a username and password specific for Domain::Abc.
-  register_handler :abc do
-    config[:username] = 'username'
-    config[:password] = 'pass'
-  end
+  register_handler :abc
 
   # Register Domain::Xyz as a handler.
-  register_handler :xyz do
-    config[:username] = 'username'
-    config[:password] = 'pass'
-
-    # Specify a required parameter
-    #
-    # When defined in a handler, parameters cascade down to all of its
-    # actions.
-    param :username, :required => true
-  end
+  register_handler :xyz
 
   # Register Domain.create as a public method. An optional block yields a
   # config hash that can be used to specify validations to be run before the
   # method is invoked.
   define_action :create do
-    # Specify an optional parameter
-    #
-    # We required username above for Xyz. This will make that parameter
-    # optional when Xyz's `create` method is called.
-    param :username, :required => false
   end
 
   # Register Domain.destroy as a public method
@@ -111,12 +90,6 @@ class Domain::Xyz
   end
 end
 ```
-
-Handler classes automatically have `config` and `params` class methods
-available. These are hashes that contain configs/params specific to the
-handler. The config hash is meant to store things like usernames, passwords,
-etc, that would be used by a handler. The params hash is to store parameters
-that must be set for a handler to perform a valid request.
 
 The example driver above also defined `nameservers` namespace with a `list`
 action (eg: `Domain.nameservers.list`). To implement this, a Nameservers class
