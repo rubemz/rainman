@@ -22,7 +22,7 @@ describe "Rainman integration" do
 
     it "has instance methods for each namespace/action" do
       methods = subject.instance_methods.map(&:to_sym)
-      methods.should == [:nameservers, :list, :transfer]
+      methods.should include(:nameservers, :list, :transfer)
     end
 
     describe "Opensrs integration" do
