@@ -196,7 +196,7 @@ module Rainman
     #
     # Returns a Module.
     def namespace(name, opts = {}, &block)
-      raise Rainman::MissingBlock, :namespace unless block_given?
+      raise MissingBlock, :namespace unless block_given?
 
       create_method(name) do
         key = "@#{name}"
