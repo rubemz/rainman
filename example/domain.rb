@@ -20,7 +20,7 @@ module Domain
 
   register_handler :opensrs
 
-  namespace :nameservers, :one => :two do
+  namespace :nameservers do
     define_action :list
   end
 
