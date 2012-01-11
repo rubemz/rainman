@@ -258,6 +258,7 @@ describe "Rainman::Driver" do
     def create_ns_class(name, base)
       klass = Class.new do
         def hi; self.class.handler_name; end
+        def bye; :nonono!; end
         def self.handler_name; name; end
         def self.validations; { :global => Rainman::Option.new(:global) }; end
       end
@@ -279,15 +280,25 @@ describe "Rainman::Driver" do
       @module.send(:register_handler, :abc)
       @module.send(:register_handler, :xyz)
       @module.set_default_handler :abc
-      @module.send(:namespace, :bob)
+      @module.send(:namespace, :bob) do
+        define_action :hi
+      end
+    end
+
+    it "raises exception calling a method that isn't registered" do
+      expect { @module.bob.bye }.to raise_error(NoMethodError)
+    end
+
+    it "raises no exception calling a method that is registered" do
+      @module.bob.hi.should == "MissDaisy::Abc::Bob"
     end
 
     it "creates a method for the namespace" do
       @module.should respond_to(:bob)
     end
 
-    it "returns a Runner" do
-      @module.bob.should be_a(Rainman::Runner)
+    it "returns an anonymous Module" do
+      @module.bob.should be_a(Module)
     end
 
     it "uses the right handler" do

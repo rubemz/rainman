@@ -188,37 +188,26 @@ module Rainman
       handlers[name] = inject_handler_methods(klass, name.to_sym, &block)
     end
 
-    # Private: Define a new action.
+    # Private: Create a new namespace.
     #
-    # name - The Symbol handler name.
-    # opts - Options (unused currently).
+    # name  - The Symbol handler name.
+    # opts  - Arguments (unused currently).
+    # block - A required block used to create actions within the namespace
     #
     # Example
     #
-    #   define_action :blah
+    #   namespace :nameservers do
+    #     define_action :list
+    #   end
     #
-    # Returns a Proc.
-    def define_action(name, opts = {})
-      create_method(name) do |*args, &block|
-        current_handler_instance.runner.send(name, *args, &block)
-      end
-    end
-
-    # Private: Create a new namespace.
+    # Raises Rainman::MissingBlock if called without a block.
     #
-    # name - The Symbol handler name.
-    # opts - Arguments (unused currently).
-    #
-    # Yields the handler class config if a block is given.
-    #
-    # Returns a Proc.
+    # Returns a Module.
     def namespace(name, opts = {}, &block)
-      # config_key = "#{self.name}##{name}"
-      # klass_config = config[config_key] = opts
+      raise Rainman::MissingBlock, :namespace unless block_given?
 
       create_method(name) do
-        name = __method__.to_sym
-        key  = "@#{name}"
+        key = "@#{name}"
 
         if instance_variable_defined?(key)
           ns = instance_variable_get(key)
@@ -227,35 +216,22 @@ module Rainman
         end
 
         unless ns[current_handler]
-          klass = current_handler_instance.class.const_get(name.to_s.camelize)
+          mod = Module.new do
+            extend self
+            extend ActionMethods
+            class << self
+              attr_accessor :current_handler_instance
+            end
+          end
 
-          ns[current_handler] = inject_handler_methods(klass, name).new
+          klass = current_handler_instance.class.const_get(name.to_s.camelize)
+          mod.current_handler_instance = inject_handler_methods(klass, name).new
+
+          mod.instance_eval(&block)
+          ns[current_handler] = mod
         end
 
-        ns[current_handler].runner
-      end
-    end
-
-    # Private: Creates a new method.
-    #
-    # method - The method name.
-    # args   - Arguments to be supplied to the method (optional).
-    # block  - Block to be supplied to the method (optional).
-    #
-    # Examples
-    #
-    #   create_method :blah do
-    #     # code to execute
-    #   end
-    #
-    # Raises Rainman::AlreadyImplemented if the method already exists.
-    #
-    # Returns a Proc.
-    def create_method(method, *args, &block)
-      if respond_to?(method)
-        raise AlreadyImplemented, method
-      else
-        define_method(method, *args, &block)
+        ns[current_handler]
       end
     end
 
@@ -299,5 +275,49 @@ module Rainman
       klass_i.instance_variable_set("@#{key}", value)
       klass_i.instance_eval(&block) if block_given?
     end
+
+    # These methods are used to create handler actions.
+    module ActionMethods
+      # Private: Define a new action.
+      #
+      # name - The Symbol handler name.
+      # opts - Options (unused currently).
+      #
+      # Example
+      #
+      #   define_action :blah
+      #
+      # Returns a Proc.
+      def define_action(name, opts = {})
+        create_method(name) do |*args, &block|
+          current_handler_instance.runner.send(name, *args, &block)
+        end
+      end
+
+      # Private: Creates a new method.
+      #
+      # method - The method name.
+      # args   - Arguments to be supplied to the method (optional).
+      # block  - Block to be supplied to the method (optional).
+      #
+      # Examples
+      #
+      #   create_method :blah do
+      #     # code to execute
+      #   end
+      #
+      # Raises Rainman::AlreadyImplemented if the method already exists.
+      #
+      # Returns a Proc.
+      def create_method(method, *args, &block)
+        if respond_to?(method, true)
+          raise AlreadyImplemented, "#{inspect}::#{method}"
+        else
+          define_method(method, *args, &block)
+        end
+      end
+    end
+
+    include ActionMethods
   end
 end
