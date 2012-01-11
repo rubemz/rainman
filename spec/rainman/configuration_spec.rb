@@ -26,4 +26,8 @@ describe Rainman::Configuration do
     c[:testc].should == :this_is_the_test
   end
 
+  it "should have a :validations key" do
+    subject.data[:global].should have_key(:validations)
+  end
+
 end
