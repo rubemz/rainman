@@ -8,7 +8,11 @@ describe "Rainman Exceptions" do
         const = Rainman.const_get(klass)
         args  = opts[:args] || []
         mesg  = opts[:message]
-        expect { raise const, *args }.to raise_error(const, mesg)
+        if args.is_a?(Hash)
+          expect { raise const, args }.to raise_error(const, mesg)
+        else
+          expect { raise const, *args }.to raise_error(const, mesg)
+        end
       end
     end
   end
@@ -33,4 +37,8 @@ describe "Rainman Exceptions" do
   test_exception :MissingBlock,
     :args    => :blah,
     :message => "Can't call :blah without a block!"
+
+  test_exception :MissingHandlerMethod,
+    :args    => {:method => :blah, :class => 'Blah'},
+    :message => "Expected 'blah' to be defined in Blah"
 end

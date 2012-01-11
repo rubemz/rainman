@@ -40,4 +40,13 @@ module Rainman
       super "Can't call #{method.inspect} without a block!"
     end
   end
+
+  # MissingHandlerMethode is raised when trying to call a handler method that
+  # does not exist
+  class MissingHandlerMethod < StandardError
+    # params - A hash of :method and :class
+    def initialize(params = {})
+      super "Expected '#{params[:method]}' to be defined in #{params[:class]}"
+    end
+  end
 end
