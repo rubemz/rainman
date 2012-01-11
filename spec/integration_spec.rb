@@ -10,14 +10,6 @@ describe "Rainman integration" do
       its([:opensrs]) { should == Domain::Opensrs }
     end
 
-    describe "config" do
-      subject { Domain.config }
-
-      its([:user])    { should == :global }
-      its([:enom])    { should be_a Hash }
-      its([:opensrs]) { should be_a Hash }
-    end
-
     its(:default_handler) { should == :opensrs }
 
     it "has instance methods for each namespace/action" do

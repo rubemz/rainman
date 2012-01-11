@@ -18,7 +18,7 @@ describe Rainman::Runner do
 
 
   describe "#execute" do
-    it "validates paramters"
+    pending
   end
 
   describe "#method_missing" do

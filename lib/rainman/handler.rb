@@ -2,13 +2,6 @@ module Rainman
   # The Handler module contains methods that are added to handler classes at
   # runtime. They are available as class methods.
   module Handler
-    # Public: Alias for the Config hash.
-    #
-    # Returns the Rainman::Driver::Config Hash singleton.
-    def config
-      @config
-    end
-
     # Public: The name of this handler.
     #
     # Returns a Symbol.

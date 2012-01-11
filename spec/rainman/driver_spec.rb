@@ -42,13 +42,6 @@ describe "Rainman::Driver" do
     end
   end
 
-  describe "#config" do
-    it "returns an empty hash" do
-      @module.config.should be_a Hash
-      @module.config.should eq(@module.instance_variable_get(:@config))
-    end
-  end
-
   describe "#with_handler" do
     before do
       @klass = Class.new do
@@ -177,15 +170,7 @@ describe "Rainman::Driver" do
 
     it "extends handler with handler methods" do
       @bob.should_receive(:extend).with(Rainman::Handler)
-      @bob.stub(:config).and_return({})
       @module.send(:register_handler, :bob)
-    end
-
-    it "evaluates a block if given" do
-      @module.send(:register_handler, :bob) do
-        config[:test] = :omghi2u
-      end
-      @bob.config[:test].should == :omghi2u
     end
   end
 
@@ -240,17 +225,6 @@ describe "Rainman::Driver" do
     it "sets @handler_name class var" do
       @module.send(:inject_handler_methods, @bob, :bob)
       @bob.handler_name.should == :bob
-    end
-
-    it "sets @config class var" do
-      @module.send(:inject_handler_methods, @bob, :bob)
-      @bob.config.should eq(@bob.instance_variable_get(:@config))
-    end
-
-    it "instance_evals block" do
-      blk = lambda { }
-      @module.should_receive(:instance_eval_value)
-      @module.send(:inject_handler_methods, @bob, :bob, &blk)
     end
   end
 
@@ -318,20 +292,6 @@ describe "Rainman::Driver" do
           handler.bob.hi.should == expected
         end
       end
-    end
-  end
-
-  describe "#instance_eval_value" do
-    before do
-      @hash = {}
-      @module.send(:instance_eval_value, :config, @hash) do
-        config[:blah] = :one
-      end
-    end
-
-    it "evals block setting config" do
-      @hash.should have_key(:blah)
-      @hash[:blah].should == :one
     end
   end
 end

@@ -21,14 +21,6 @@ module Rainman
       @all ||= []
     end
 
-    # Public: A Hash that stores configuration variables that can be
-    # used by handlers and actions in a Driver.
-    #
-    # Returns a Hash.
-    def config
-      @config ||= Configuration.data
-    end
-
     # Public: Registered handlers.
     #
     # Keys are the handler name (eg: :my_handler); values are the handler
@@ -173,19 +165,15 @@ module Rainman
     #
     #   register_handler :bob
     #
-    #   register_handler :pop do
-    #     config[:username] = 'username'
-    #   end
-    #
     # Returns the handler Class.
-    def register_handler(name, opts = {}, &block)
+    def register_handler(name, opts = {})
       opts.reverse_merge!(
         :class_name => "#{self.name}::#{name.to_s.camelize}"
       )
 
       klass = opts[:class_name].constantize
 
-      handlers[name] = inject_handler_methods(klass, name.to_sym, &block)
+      handlers[name] = inject_handler_methods(klass, name.to_sym)
     end
 
     # Private: Create a new namespace.
@@ -239,41 +227,17 @@ module Rainman
     #
     # base           - The base Class/Module.
     # handler_name   - The Symbol name of the handler class.
-    # block          - Optional Proc that will be evaluated within the context
-    #                  of the base's singleton class.
     #
     # Example
     #
     #   inject_handler_methods(SomeHandler, :some_handler)
     #
     # Returns base Class/Module.
-    def inject_handler_methods(base, handler_name, &block)
+    def inject_handler_methods(base, handler_name)
       base.extend(Handler)
       base.instance_variable_set(:@handler_name, handler_name)
       base.instance_variable_set(:@parent_klass, self)
-      conf = base.instance_variable_set(:@config, Configuration.new(handler_name))
-      instance_eval_value(:config, conf, &block)
       base
-    end
-
-    # Private: Creates and instance_evals an anonymous class with key available
-    # as an instance method.
-    #
-    # Example
-    #
-    #   def blah(&block)
-    #     instance_eval_value(:name, 'Josh', &block)
-    #   end
-    #
-    #   blah do
-    #     name # in this context, name is == 'Josh'
-    #   end
-    def instance_eval_value(key, value, &block)
-      klass = Class.new
-      klass.send(:attr_reader, key)
-      klass_i = klass.new
-      klass_i.instance_variable_set("@#{key}", value)
-      klass_i.instance_eval(&block) if block_given?
     end
 
     # These methods are used to create handler actions.

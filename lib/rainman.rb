@@ -4,7 +4,6 @@ require "rainman/option"
 require "rainman/handler"
 require "rainman/runner"
 require "rainman/driver"
-require "rainman/configuration"
 
 module Rainman
   extend self

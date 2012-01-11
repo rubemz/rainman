@@ -15,17 +15,7 @@ describe Rainman::Handler do
     @class = Class.new do
       extend Rainman::Handler
     end
-
-    @module.config[:blah] = {}
-
-    @class.instance_variable_set(:@config, @module.config[:blah])
     @class.instance_variable_set(:@handler_name, :blah)
-  end
-
-  describe "#config" do
-    it "returns the config" do
-      @class.config.should eq @module.config[:blah]
-    end
   end
 
   describe "#handler_name" do
