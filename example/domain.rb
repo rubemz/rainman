@@ -30,3 +30,5 @@ module Domain
 
   set_default_handler :opensrs
 end
+
+Domain.list

@@ -13,7 +13,7 @@ module Rainman
     # on the data Hash.
     def initialize(name)
       @name = name
-      self.class.data[name] = {}
+      self.class.data[name] = { :validations => {} }
     end
 
     # Public: Alias for the config data
