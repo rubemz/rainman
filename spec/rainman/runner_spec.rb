@@ -28,6 +28,21 @@ describe Rainman::Runner do
       subject.hello(args)
     end
 
+    it "should raise an error on missing methods" do
+      module Oops
+        extend Rainman::Driver
+        class Example
+        end
+
+        register_handler :example
+        define_action :missing
+        set_default_handler :example
+      end
+
+      expect { Oops.missing }.to raise_error(Rainman::MissingHandlerMethod)
+    end
+
     it { expect { subject.missing }.to raise_error(NoMethodError) }
   end
 end
+#raise Rainman::MissingHandlerMethod.new(:method => method, :class => name)
