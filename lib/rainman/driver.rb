@@ -141,7 +141,11 @@ module Rainman
     #
     # Returns an instance of the current handler class.
     def current_handler_instance
-      handler_instances[current_handler] ||= handlers[current_handler].new
+      handler_instances[current_handler] ||= begin
+        _handler = handlers[current_handler].new
+        _handler.setup_handler if _handler.respond_to?(:setup_handler)
+        _handler
+      end
     end
 
     # Private: Get the current handler in use by this Driver.

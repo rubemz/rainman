@@ -110,6 +110,32 @@ describe "Rainman::Driver" do
       @module.instance_variable_set(:@handler_instances, { :foo => :test })
       @module.send(:handler_instances).should == { :foo => :test }
     end
+
+    it "should call handler_setup if it exists" do
+      module MissDaisy
+        extend Rainman::Driver
+        class WithSetup
+          attr_reader :setup
+
+          def setup_handler
+            @setup = true
+          end
+        end
+
+        class WithoutSetup
+          attr_reader :setup
+        end
+
+        register_handler :with_setup
+        register_handler :without_setup
+        define_action :setup
+      end
+
+      MissDaisy.set_current_handler :with_setup
+      MissDaisy.setup.should be_true
+      MissDaisy.set_current_handler :without_setup
+      MissDaisy.setup.should_not be_true
+    end
   end
 
   describe "#set_current_handler" do
