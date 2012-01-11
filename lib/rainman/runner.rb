@@ -72,7 +72,11 @@ module Rainman
       if handler.respond_to?(method)
         execute(handler, method, *args, &block)
       elsif parent_klass.respond_to?(method)
-        execute(parent_klass, method, *args, &block)
+        if parent_klass.instance_methods.include?(method) && !parent_klass.namespaces.include?(method)
+          raise Rainman::MissingHandlerMethod.new(:method => method, :class => handler.class.name)
+        else
+          execute(parent_klass, method, *args, &block)
+        end
       else
         super
       end
