@@ -50,6 +50,13 @@ module Rainman
       end
     end
 
+    # Public: A list of the registered namespaces
+    #
+    # Returns an Array
+    def namespaces
+      @namespaces ||= []
+    end
+
     # Public: Temporarily change a Driver's current handler. The handler is
     # changed for the duration of the block supplied. This is useful to perform
     # actions using multiple handlers without changing defaults.
@@ -231,9 +238,9 @@ module Rainman
 
           ns[current_handler] = inject_handler_methods(klass, name).new
         end
-
         ns[current_handler].runner
       end
+      namespaces << name
     end
 
     # Private: Creates a new method.

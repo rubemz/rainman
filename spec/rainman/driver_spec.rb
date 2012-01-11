@@ -121,9 +121,9 @@ describe "Rainman::Driver" do
 
   describe "#set_current_handler" do
     it "sets @current_handler" do
-      @module.set_current_handler :blah
+      @module.send(:set_current_handler, :blah)
       @module.instance_variable_get(:@current_handler).should == :blah
-      @module.set_current_handler :other
+      @module.send(:set_current_handler, :other)
       @module.instance_variable_get(:@current_handler).should == :other
     end
   end
@@ -276,10 +276,12 @@ describe "Rainman::Driver" do
       create_ns_class :bob, @module::Abc
       create_ns_class :bob, @module::Xyz
 
+      @module.namespaces.should be_empty
       @module.send(:register_handler, :abc)
       @module.send(:register_handler, :xyz)
       @module.set_default_handler :abc
       @module.send(:namespace, :bob)
+      @module.namespaces.should include(:bob)
     end
 
     it "creates a method for the namespace" do
