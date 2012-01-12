@@ -31,19 +31,14 @@ require 'rainman'
 module Domain
   extend Rainman::Driver
 
-  # Register Domain::Abc as a handler. An optional block yields a config hash
-  # which can be used to store variables needed by the handler class, in this
-  # case a username and password specific for Domain::Abc.
+  # Register Domain::Abc as a handler.
   register_handler :abc
 
   # Register Domain::Xyz as a handler.
   register_handler :xyz
 
-  # Register Domain.create as a public method. An optional block yields a
-  # config hash that can be used to specify validations to be run before the
-  # method is invoked.
-  define_action :create do
-  end
+  # Register Domain.create as a public method
+  define_action :create
 
   # Register Domain.destroy as a public method
   define_action :destroy
