@@ -124,7 +124,6 @@ class Domain::Abc
     @config[:registrar_password] = 'mypassword'
   end
 end
-
 ```
 
 ## Using a driver
