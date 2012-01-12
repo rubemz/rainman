@@ -111,17 +111,23 @@ end
 ```
 
 ## Handler setup
-If your handlers require any sort of setup you can define a
-`setup_handler` method. Rainman will automatically call this method on
-your class once, after it is initialized.
+If your handler requires any sort of setup that can't be handled in your
+initialize method (e.g. you're subclassing and can't override
+initialize), you can define a setup_handler method. Rainman will
+automatically call this method for you after the class is initialized.
 
 ```ruby
 class Domain::Abc
   attr_accessor :config
 
+  def initialized
+    @config = { :username => 'username', :password => 'password' }
+  end
+end
+
+class Domain::Xyz < Domain::Abc
   def setup_handler
-    @config[:registrar_username] = 'username'
-    @config[:registrar_password] = 'mypassword'
+    @config[:username] = 'other'
   end
 end
 ```
