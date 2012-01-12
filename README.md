@@ -184,7 +184,7 @@ reason.
 
 ### Including drivers in other classes
 
-A driver can be included in another class and it's actions are available as
+A driver can be included in another class and its actions are available as
 instance methods.
 
 ```ruby
@@ -200,12 +200,36 @@ s.destroy
 
 s.nameservers.list
 
-s.with_handler(:abc) do |driver|
-  driver.create
+s.with_handler(:abc) do |handler|
+  handler.create
 end
 
-s.set_current_handler :zyz
+s.set_current_handler :xyz
 s.create
+```
+
+If you want to namespace a driver in another class, it's as easy as:
+
+```ruby
+class Service
+  def domain
+    Domain
+  end
+end
+
+s = Service.new
+
+s.domain.create
+
+s.domain.destroy
+
+s.domain.nameservers.list
+
+s.domain.with_handler(:abc) do |handler|
+  handler.create
+end
+
+s.domain.set_current_handler :xyz
 ```
 
 ## Note on Patches/Pull Requests
