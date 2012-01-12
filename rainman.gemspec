@@ -18,6 +18,4 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'rspec', '~> 2.7.0'
   gem.add_development_dependency 'autotest-standalone', '~> 4.5.8'
   gem.add_development_dependency 'rake', '~> 0.9.2.2'
-  gem.add_dependency 'activesupport', '~> 3.1.3'
-  gem.add_dependency 'i18n', '~>0.6.0'
 end

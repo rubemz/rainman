@@ -1,6 +1,4 @@
 require "forwardable"
-require "active_support/core_ext/string"
-require "active_support/core_ext/array"
 
 module Rainman
   # The Rainman::Driver module contains methods for defining Drivers and
@@ -144,7 +142,6 @@ module Rainman
       handler_instances[current_handler] ||= handlers[current_handler].new.tap do |_handler|
         _handler.setup_handler if _handler.respond_to?(:setup_handler)
       end
-
     end
 
     # Private: Get the current handler in use by this Driver.
