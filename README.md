@@ -110,6 +110,23 @@ class Domain::Xyz::Nameserver
 end
 ```
 
+## Handler setup
+If your handlers require any sort of setup you can define a
+`setup_handler` method. Rainman will automatically call this method on
+your class once, after it is initialized.
+
+```ruby
+class Domain::Abc
+  attr_accessor :config
+
+  def setup_handler
+    @config[:registrar_username] = 'username'
+    @config[:registrar_password] = 'mypassword'
+  end
+end
+
+```
+
 ## Using a driver
 
 With a driver and handler defined, the driver can now be used in a few
