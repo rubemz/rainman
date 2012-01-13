@@ -4,8 +4,8 @@ require File.expand_path('../lib/rainman/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ["Justin Mazzi"]
   gem.email         = ["jmazzi@gmail.com"]
-  gem.description   = %q{A library for abstracting drivers}
-  gem.summary       = %q{A library for abstracting drivers}
+  gem.description   = %q{A library for writing drivers using the abstract factory pattern}
+  gem.summary       = %q{Rainman is an experiment in writing drivers and handlers. It is a Ruby implementation of the abstract factory pattern. Abstract factories provide the general API used to interact with any number of interfaces. Interfaces perform actual operations. Rainman provides a simple DSL for implementing this design.}
   gem.homepage      = "http://www.eng5.com"
 
   gem.files         = `git ls-files`.split("\n")
