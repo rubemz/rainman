@@ -256,6 +256,8 @@ module Rainman
         create_method(name) do |*args, &block|
           current_handler_instance.runner.send(name, *args, &block)
         end
+
+        alias_method opts[:alias], name if opts[:alias]
       end
 
       # Private: Creates a new method.

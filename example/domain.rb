@@ -20,7 +20,7 @@ module Domain
     define_action :list
   end
 
-  define_action :list
+  define_action :list, :alias => :all
 
   define_action :transfer
 

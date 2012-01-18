@@ -40,8 +40,8 @@ module Domain
   # Register Domain.create as a public method
   define_action :create
 
-  # Register Domain.destroy as a public method
-  define_action :destroy
+  # Register Domain.destroy as a public method; Alias Domain.delete to it
+  define_action :destroy, :alias => :delete
 
   # Register Domain.namservers.list as a public method
   namespace :nameservers do
@@ -149,6 +149,7 @@ Domain.create({})
 
 # Destroy a domain
 Domain.destroy({})
+Domain.delete({})
 
 # List domain nameservers
 Domain.nameservers.list({})
@@ -197,6 +198,7 @@ s = Service.new
 s.create
 
 s.destroy
+s.delete
 
 s.nameservers.list
 
@@ -222,6 +224,7 @@ s = Service.new
 s.domain.create
 
 s.domain.destroy
+s.domain.delete
 
 s.domain.nameservers.list
 

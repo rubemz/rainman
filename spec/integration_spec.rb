@@ -19,6 +19,7 @@ describe "Rainman integration" do
 
     describe "Opensrs integration" do
       its(:list)              { should == :opensrs_list }
+      its(:all)               { should == :opensrs_list }
       its(:transfer)          { should == :opensrs_transfer }
       its("nameservers.list") { should == :opensrs_ns_list }
     end
@@ -33,6 +34,7 @@ describe "Rainman integration" do
       end
 
       its(:list)              { should == :enom_list }
+      its(:all)               { should == :enom_list }
       its(:transfer)          { should == :enom_transfer }
       its("nameservers.list") { should == :enom_ns_list }
     end

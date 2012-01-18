@@ -228,6 +228,14 @@ describe "Rainman::Driver" do
 
       @module.blah
     end
+
+    it "aliases the method if :alias is supplied" do
+      @module.should_not respond_to(:blah)
+      @module.send(:define_action, :blah, :alias => :superBLAH)
+      @module.should respond_to(:blah)
+      @module.should respond_to(:superBLAH)
+      @module.method(:blah).should eq(@module.method(:superBLAH))
+    end
   end
 
   describe "#create_method" do
