@@ -236,6 +236,24 @@ describe "Rainman::Driver" do
       @module.should respond_to(:superBLAH)
       @module.method(:blah).should eq(@module.method(:superBLAH))
     end
+
+    it "delegates the method if :delegate_to is supplied" do
+      klass = Class.new do
+        def self.name; 'Bob'; end
+        def profile; :bob_is_cool; end
+        def self.parent_klass; end
+      end
+
+      @module.const_set(:Bob, klass)
+
+      runner = Rainman::Runner.new(MissDaisy::Bob.new)
+      klass.stub(:runner).and_return(runner)
+      @module.stub(:current_handler_instance).and_return(klass)
+
+      @module.send(:define_action, :description, :delegate_to => :profile)
+      @module.should respond_to(:description)
+      @module.description.should == :bob_is_cool
+    end
   end
 
   describe "#create_method" do

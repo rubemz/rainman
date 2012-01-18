@@ -43,6 +43,10 @@ module Domain
   # Register Domain.destroy as a public method; Alias Domain.delete to it
   define_action :destroy, :alias => :delete
 
+  # Register Domain.cancel as a public method; it delegates to a handler's
+  # :cancel_account method.
+  define_action :cancel, :delegate_to => :cancel_account
+
   # Register Domain.namservers.list as a public method
   namespace :nameservers do
     define_action :list
@@ -69,6 +73,12 @@ class Domain::Abc
   # Returns true or false.
   def destroy(params = {})
   end
+
+  # Public: Cancel a domain account
+  #
+  # Returns true or false.
+  def cancel_account(params = {})
+  end
 end
 
 class Domain::Xyz
@@ -82,6 +92,12 @@ class Domain::Xyz
   #
   # Returns true or false.
   def destroy(params = {})
+  end
+
+  # Public: Cancel a domain account
+  #
+  # Returns true or false.
+  def cancel_account(params = {})
   end
 end
 ```
@@ -151,6 +167,9 @@ Domain.create({})
 Domain.destroy({})
 Domain.delete({})
 
+# Cancel domain acconut
+Domain.cancel
+
 # List domain nameservers
 Domain.nameservers.list({})
 ```
@@ -200,6 +219,8 @@ s.create
 s.destroy
 s.delete
 
+s.cancel
+
 s.nameservers.list
 
 s.with_handler(:abc) do |handler|
@@ -225,6 +246,8 @@ s.domain.create
 
 s.domain.destroy
 s.domain.delete
+
+s.domain.cancel
 
 s.domain.nameservers.list
 

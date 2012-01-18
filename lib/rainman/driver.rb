@@ -246,8 +246,10 @@ module Rainman
       #
       # name - The Symbol handler name.
       # opts - A Hash of options used for creating the method:
-      #        :alias - If supplied, an alias will be created for the defined
-      #                 method.
+      #        :delegate_to - The method name to run on the handler. Defaults
+      #                       to the action's name.
+      #        :alias       - If supplied, an alias will be created for the
+      #                       defined method.
       #
       # Example
       #
@@ -258,7 +260,8 @@ module Rainman
       # Returns a Proc.
       def define_action(name, opts = {})
         create_method(name) do |*args, &block|
-          current_handler_instance.runner.send(name, *args, &block)
+          method = opts[:delegate_to] || name
+          current_handler_instance.runner.send(method, *args, &block)
         end
 
         alias_method opts[:alias], name if opts[:alias]
