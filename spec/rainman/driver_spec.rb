@@ -198,6 +198,20 @@ describe "Rainman::Driver" do
       @bob.should_receive(:extend).with(Rainman::Handler)
       @module.send(:register_handler, :bob)
     end
+
+    describe ":class_name option" do
+      it "allows a string" do
+        @module.send(:register_handler, :bob, :class_name => 'MissDaisy::Bob')
+        @module.handlers.should have_key(:bob)
+        @module.handlers[:bob].should == @bob
+      end
+
+      it "allows a constant" do
+        @module.send(:register_handler, :bob, :class_name => MissDaisy::Bob)
+        @module.handlers.should have_key(:bob)
+        @module.handlers[:bob].should == @bob
+      end
+    end
   end
 
   describe "#define_action" do

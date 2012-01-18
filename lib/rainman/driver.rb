@@ -171,7 +171,7 @@ module Rainman
         :class_name => "#{self.name}::#{name.to_s.camelize}"
       )
 
-      klass = opts[:class_name].constantize
+      klass = opts[:class_name].to_s.constantize
 
       handlers[name] = inject_handler_methods(klass, name.to_sym)
     end
