@@ -245,11 +245,15 @@ module Rainman
       # Private: Define a new action.
       #
       # name - The Symbol handler name.
-      # opts - Options (unused currently).
+      # opts - A Hash of options used for creating the method:
+      #        :alias - If supplied, an alias will be created for the defined
+      #                 method.
       #
       # Example
       #
       #   define_action :blah
+      #
+      #   define_action :destroy, :alias => :delete
       #
       # Returns a Proc.
       def define_action(name, opts = {})
