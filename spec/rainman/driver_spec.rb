@@ -215,16 +215,25 @@ describe "Rainman::Driver" do
   end
 
   describe "#define_action" do
+    before do
+      @klass = Class.new do
+        def self.name; 'Bob'; end
+        def profile; :bob_is_cool; end
+        def self.parent_klass; end
+      end
+
+      @module.const_set(:Bob, @klass)
+
+      @runner = Rainman::Runner.new(MissDaisy::Bob.new)
+      @klass.stub(:runner).and_return(@runner)
+      @module.stub(:current_handler_instance).and_return(@klass)
+    end
+
     it "creates the method" do
       @module.should_not respond_to(:blah)
       @module.send(:define_action, :blah)
       @module.should respond_to(:blah)
-
-      klass = Class.new.new
-      runner = Rainman::Runner.new(klass)
-      klass.stub(:runner).and_return(runner)
-      @module.stub(:current_handler_instance).and_return(klass)
-      runner.should_receive(:send).with(:blah)
+      @runner.should_receive(:send).with(:blah)
 
       @module.blah
     end
@@ -234,22 +243,11 @@ describe "Rainman::Driver" do
       @module.send(:define_action, :blah, :alias => :superBLAH)
       @module.should respond_to(:blah)
       @module.should respond_to(:superBLAH)
-      @module.method(:blah).should eq(@module.method(:superBLAH))
+      @runner.stub(:blah).and_return(:this_is_the_blah)
+      @module.superBLAH.should == :this_is_the_blah
     end
 
     it "delegates the method if :delegate_to is supplied" do
-      klass = Class.new do
-        def self.name; 'Bob'; end
-        def profile; :bob_is_cool; end
-        def self.parent_klass; end
-      end
-
-      @module.const_set(:Bob, klass)
-
-      runner = Rainman::Runner.new(MissDaisy::Bob.new)
-      klass.stub(:runner).and_return(runner)
-      @module.stub(:current_handler_instance).and_return(klass)
-
       @module.send(:define_action, :description, :delegate_to => :profile)
       @module.should respond_to(:description)
       @module.description.should == :bob_is_cool
