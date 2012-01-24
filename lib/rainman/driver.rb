@@ -35,9 +35,7 @@ module Rainman
     #
     # Returns a Runner instance or the result of a block.
     def with_handler(name = nil)
-      Runner.handlers[name || current_handler].tap do |h|
-        yield h if block_given?
-      end
+      Runner.with_handler(name || current_handler)
     end
 
     # Public: Sets the default handler used for this Driver.
@@ -119,13 +117,8 @@ module Rainman
     #
     # Returns the handler Class.
     def register_handler(name, opts = {})
-      opts.reverse_merge!(
-        :class_name => "#{self.name}::#{name.to_s.camelize}"
-      )
-
-      klass = opts[:class_name].to_s.constantize
-
-      Runner.new(name, klass, self)
+      klass = opts.delete(:class_name) || "#{self.name}::#{name.to_s.camelize}"
+      Runner.new(name, klass.to_s.constantize, self, opts)
     end
 
     # Private: Create a new namespace.

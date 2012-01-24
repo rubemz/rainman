@@ -29,7 +29,28 @@ describe "Rainman::Driver" do
   end
 
   describe "#with_handler" do
-    it "does something..."
+    before do
+      @hello1 = Class.new
+      @hello2 = Class.new
+
+      Rainman::Runner.stub(:handlers).and_return(
+        :hello1 => @hello1,
+        :hello2 => @hello2
+      )
+      @module.stub(:current_handler).and_return(:hello_2)
+    end
+
+    it "yields the given handler" do
+      @module.with_handler :hello_1  do |h|
+        h.should eq @hello1
+      end
+    end
+
+    it "yields the default handler without a name" do |h|
+      @module.with_handler do |h|
+        h.should eq @hello2
+      end
+    end
   end
 
   describe "#set_default_handler" do
@@ -89,7 +110,7 @@ describe "Rainman::Driver" do
         def self.name; 'Bob'; end
       end
       @module.const_set(:Bob, @bob)
-      Rainman::Runner.should_receive(:new).with(:bob, MissDaisy::Bob, @module)
+      Rainman::Runner.should_receive(:new).with(:bob, MissDaisy::Bob, @module, {})
     end
 
     it "creates a new Runner" do

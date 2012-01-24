@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Rainman::Runner do
   before do
     @handler = mock("Handler")
-    @handler.stub(:hello).and_return(:hello)
+    @handler.stub(:hi).and_return(:salutations)
     @handler.stub(:new).and_return(@handler)
   end
 
@@ -31,24 +31,27 @@ describe Rainman::Runner do
   end
 
   describe "::with_handler" do
-    it "yields the given handler" do
+    it "yields the given handler if a block is given" do
       subject.class.with_handler :hello do |h|
         h.should eq subject
       end
+
     end
 
-    it "raises exception if no block is given" do
-      expect do
-        subject.class.with_handler :hello
-      end.to raise_error Rainman::MissingBlock
+    it "returns the block's return value" do
+      subject.class.with_handler(:hello) { |h| :ret }.should == :ret
+    end
+
+    it "returns the given handler if no block is given" do
+      subject.class.with_handler(:hello).should eq(subject)
     end
   end
 
   describe "#method_missing" do
     it "should delegate to the handler" do
       args = { :arg => 1 }
-      handler.should_receive(:hello).with(args).once
-      subject.hello(args)
+      handler.should_receive(:hi).with(args).once
+      subject.hi(args)
     end
 
     it { expect { subject.missing }.to raise_error(NoMethodError) }
