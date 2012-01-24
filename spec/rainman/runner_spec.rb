@@ -30,23 +30,6 @@ describe Rainman::Runner do
     end
   end
 
-  describe "::with_handler" do
-    it "yields the given handler if a block is given" do
-      subject.class.with_handler :hello do |h|
-        h.should eq subject
-      end
-
-    end
-
-    it "returns the block's return value" do
-      subject.class.with_handler(:hello) { |h| :ret }.should == :ret
-    end
-
-    it "returns the given handler if no block is given" do
-      subject.class.with_handler(:hello).should eq(subject)
-    end
-  end
-
   describe "#method_missing" do
     it "should delegate to the handler" do
       args = { :arg => 1 }

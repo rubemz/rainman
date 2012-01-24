@@ -37,11 +37,11 @@ describe "Rainman::Driver" do
         :hello1 => @hello1,
         :hello2 => @hello2
       )
-      @module.stub(:current_handler).and_return(:hello_2)
+      @module.stub(:current_handler).and_return(:hello2)
     end
 
     it "yields the given handler" do
-      @module.with_handler :hello_1  do |h|
+      @module.with_handler :hello1  do |h|
         h.should eq @hello1
       end
     end
@@ -50,6 +50,14 @@ describe "Rainman::Driver" do
       @module.with_handler do |h|
         h.should eq @hello2
       end
+    end
+
+    it "returns the block value" do
+      @module.with_handler { |h| :res }.should == :res
+    end
+
+    it "returns the handler if no block is given" do
+      @module.with_handler.should eq @hello2
     end
   end
 

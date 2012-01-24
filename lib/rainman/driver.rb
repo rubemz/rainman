@@ -20,8 +20,8 @@ module Rainman
     end
 
     # Public: Temporarily change a Driver's current handler. The handler is
-    # changed for the duration of the block supplied. This is useful to perform
-    # actions using multiple handlers without changing defaults.
+    # changed for the duration of the block supplied. This is useful to
+    # perform actions using multiple handlers without changing defaults.
     #
     # name - The Symbol name of the handler to use.
     #
@@ -34,8 +34,10 @@ module Rainman
     # Yields a Runner instance if a block is given.
     #
     # Returns a Runner instance or the result of a block.
-    def with_handler(name = nil)
-      Runner.with_handler(name || current_handler)
+    def with_handler(handler = current_handler)
+      Runner.handlers[handler].tap do |h|
+        return yield h if block_given?
+      end
     end
 
     # Public: Sets the default handler used for this Driver.
