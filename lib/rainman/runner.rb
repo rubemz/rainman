@@ -8,8 +8,53 @@ module Rainman
   #     r.transfer
   #   end
   class Runner
+    # Public: Get the handler name (as an underscored Symbol).
+    attr_reader :name
+
     # Public: Gets the handler Class.
     attr_reader :handler
+
+    # Public: Registered handlers.
+    #
+    # Keys are the handler name (eg: :my_handler); values are the handler
+    # class (eg: MyHandler).
+    #
+    # Raises NoHandler if an attempt to access a key of nil is made, (eg:
+    # handlers[nil]).
+    #
+    # Raises InvalidHandler if an attempt to access an invalid key is made.
+    #
+    # Returns a Hash.
+    def self.handlers
+      @handlers ||= Hash.new do |hash, key|
+        if key.nil?
+          raise NoHandler
+        else
+          raise InvalidHandler, key
+        end
+      end
+    end
+
+    # Public: Temporarily change a Driver's current handler. The handler is
+    # changed for the duration of the block supplied. This is useful to perform
+    # actions using multiple handlers without changing defaults.
+    #
+    # name - The Symbol name of the handler to use.
+    #
+    # Example
+    #
+    #   with_handler(:enom) do |handler|
+    #     handler.transfer
+    #   end
+    #
+    # Yields a Runner instance if a block is given.
+    #
+    # Returns a Runner instance or the result of a block.
+    def self.with_handler(name)
+      raise MissingBlock, :with_handler unless block_given?
+
+      yield handlers[name]
+    end
 
     # Public: Initialize a runner.
     #
@@ -18,15 +63,13 @@ module Rainman
     # Examples
     #
     #   Runner.new(current_handler_instance)
-    def initialize(handler)
+    def initialize(name, handler, parent, config = {})
+      @name    = name
       @handler = handler
-    end
+      @parent  = parent
+      @config  = config
 
-    # Public: Get the Symbol name of the handler.
-    #
-    # Returns a Symbol.
-    def name
-      handler.class.handler_name
+      self.class.handlers[name] = self
     end
 
     # Public: Get the handler's parent_klass
@@ -56,7 +99,13 @@ module Rainman
     # Returns the result of the handler action.
     def execute(context, method, *args, &block)
       # verify params here
-      context.send(method, *args, &block)
+      if config.has_key?(:initialize) && config[:initialize]
+        c = context.new
+      else
+        c = context
+      end
+
+      c.send(method, *args, &block)
     end
 
     # Internal: Method missing hook used to proxy methods to a handler.
@@ -69,13 +118,15 @@ module Rainman
     #
     # Returns the value of execute.
     def method_missing(method, *args, &block)
-      if handler.respond_to?(method)
-        execute(handler, method, *args, &block)
-      elsif parent_klass.respond_to?(method)
-        execute(parent_klass, method, *args, &block)
-      else
-        super
-      end
+      p name
+      p method
+      # if handler.respond_to?(method)
+      #   execute(handler, method, *args, &block)
+      # elsif parent_klass.respond_to?(method)
+      #   execute(parent_klass, method, *args, &block)
+      # else
+      #   super
+      # end
     end
   end
 end

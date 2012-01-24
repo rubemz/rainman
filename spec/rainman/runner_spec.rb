@@ -16,6 +16,19 @@ describe Rainman::Runner do
     its(:handler)     { should eql(handler) }
   end
 
+  describe "#handlers" do
+    it "returns an empty hash" do
+      subject.dhandlers.should == {}
+    end
+
+    it "raises exception when accessing an unknown key" do
+      expect { subject.handlers[:foo] }.to raise_error(Rainman::InvalidHandler)
+    end
+
+    it "raises exception when accessing a nil key" do
+      expect { subject.handlers[nil] }.to raise_error(Rainman::NoHandler)
+    end
+  end
 
   describe "#execute" do
     pending
