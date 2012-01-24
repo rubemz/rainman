@@ -14,6 +14,9 @@ module Rainman
     # Public: Gets the handler Class.
     attr_reader :handler
 
+    # Public: Gets the handler config
+    attr_reader :config
+
     # Public: Registered handlers.
     #
     # Keys are the handler name (eg: :my_handler); values are the handler
@@ -63,49 +66,13 @@ module Rainman
     # Examples
     #
     #   Runner.new(current_handler_instance)
-    def initialize(name, handler, parent, config = {})
+    def initialize(name, handler, parent = nil, config = {})
       @name    = name
       @handler = handler
       @parent  = parent
       @config  = config
 
       self.class.handlers[name] = self
-    end
-
-    # Public: Get the handler's parent_klass
-    #
-    # Returns Rainman::Driver.self
-    def parent_klass
-      handler.class.parent_klass
-    end
-
-    # Public: Delegates the given method to the handler.
-    #
-    # context - Set the context for the method (class/instance)
-    # method  - The method to send to the handler.
-    # args    - Arguments to be supplied to the method (optional).
-    # block   - Block to be supplied to the method (optional).
-    #
-    # Examples
-    #
-    #   execute(handler, :register)
-    #   execute(handler.parent_class, :register, { params: [] })
-    #   execute(handler, :register, :one, :argument) do
-    #     # some code
-    #   end
-    #
-    # Raises MissingParameter if validation fails due to missing parameters.
-    #
-    # Returns the result of the handler action.
-    def execute(context, method, *args, &block)
-      # verify params here
-      if config.has_key?(:initialize) && config[:initialize]
-        c = context.new
-      else
-        c = context
-      end
-
-      c.send(method, *args, &block)
     end
 
     # Internal: Method missing hook used to proxy methods to a handler.
@@ -116,17 +83,16 @@ module Rainman
     #
     # Raises NameError if handler does not respond to method.
     #
-    # Returns the value of execute.
+    # Returns the value of the method call.
     def method_missing(method, *args, &block)
-      p name
-      p method
-      # if handler.respond_to?(method)
-      #   execute(handler, method, *args, &block)
-      # elsif parent_klass.respond_to?(method)
-      #   execute(parent_klass, method, *args, &block)
-      # else
-      #   super
-      # end
+      init = config.has_key?(:initialize) ? config[:initialize] : true
+      hand = init ? handler.new : handler
+
+      if hand.respond_to?(method)
+        hand.send(method, *args, &block)
+      else
+        super
+      end
     end
   end
 end

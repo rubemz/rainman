@@ -4,34 +4,44 @@ describe Rainman::Runner do
   before do
     @handler = mock("Handler")
     @handler.stub(:hello).and_return(:hello)
-    @handler.class.stub(:handler_name).and_return(:name)
+    @handler.stub(:new).and_return(@handler)
   end
 
-  let(:handler)     { @handler }
-  let(:name)        { :name }
-  subject           { Rainman::Runner.new(handler) }
+  let(:handler)  { @handler }
+  let(:handlers) { subject.class.handlers }
+  subject        { Rainman::Runner.new(:hello, handler) }
 
   context "Accessors" do
-    its(:name)        { should eql(name) }
-    its(:handler)     { should eql(handler) }
+    its(:handler) { should eql(handler) }
   end
 
-  describe "#handlers" do
-    it "returns an empty hash" do
-      subject.dhandlers.should == {}
+  describe "::handlers" do
+    it "returns a hash" do
+      handlers.should be_a Hash
+      handlers[:hello].should eq subject
     end
 
     it "raises exception when accessing an unknown key" do
-      expect { subject.handlers[:foo] }.to raise_error(Rainman::InvalidHandler)
+      expect { handlers[:foo] }.to raise_error(Rainman::InvalidHandler)
     end
 
     it "raises exception when accessing a nil key" do
-      expect { subject.handlers[nil] }.to raise_error(Rainman::NoHandler)
+      expect { handlers[nil] }.to raise_error(Rainman::NoHandler)
     end
   end
 
-  describe "#execute" do
-    pending
+  describe "::with_handler" do
+    it "yields the given handler" do
+      subject.class.with_handler :hello do |h|
+        h.should eq subject
+      end
+    end
+
+    it "raises exception if no block is given" do
+      expect do
+        subject.class.with_handler :hello
+      end.to raise_error Rainman::MissingBlock
+    end
   end
 
   describe "#method_missing" do
