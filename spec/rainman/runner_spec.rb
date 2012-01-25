@@ -22,6 +22,14 @@ describe Rainman::Runner do
     its(:config)  { should eql(config) }
   end
 
+  describe "#initialize" do
+    it "stores an optional block as @handler_initializer" do
+      blk = lambda { |h| :block! }
+      run = Rainman::Runner.new(:hello2, handler, driver, &blk)
+      run.instance_variable_get(:@handler_initializer).should eq(blk)
+    end
+  end
+
   describe "#method_missing" do
     it "should delegate to the handler" do
       args = { :arg => 1 }

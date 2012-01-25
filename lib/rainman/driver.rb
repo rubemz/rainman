@@ -130,18 +130,25 @@ module Rainman
     # If a block is given it is evaluated within the context of the handler
     # Class.
     #
-    # name - The Symbol handler name.
-    # opts - A Hash containing optional arguments:
+    # name  - The Symbol handler name.
+    # opts  - A Hash containing optional arguments:
     #        :class_name - The class name to use.
+    # block - An optional block; if supplied it is set as the runner's
+    #         handler_initializer and will be called when the runner
+    #         initializes a handler class.
     #
     # Examples
     #
     #   register_handler :bob
     #
+    #   register_handler :barry do |barry|
+    #     barry.create
+    #   end
+    #
     # Returns the handler Class.
-    def register_handler(name, opts = {})
+    def register_handler(name, opts = {}, &block)
       klass = opts.delete(:class_name) || "#{self.name}::#{name.to_s.camelize}"
-      handlers[name] = Runner.new(name, klass.to_s.constantize, self, opts)
+      handlers[name] = Runner.new(name, klass.to_s.constantize, self, opts, &block)
     end
 
     # Private: Create a new namespace.

@@ -35,12 +35,13 @@ module Rainman
     #   Runner.new(:domain, DomainHandler, Domain).tap do |r|
     #     r.transfer
     #   end
-    def initialize(name, handler, driver, config = {})
+    def initialize(name, handler, driver, config = {}, &block)
       @name    = name
       @handler = handler
       @driver  = driver
       @config  = config
 
+      @handler_initializer = block if block_given?
     end
 
     # Internal: Method missing hook used to proxy methods to a handler.
@@ -53,14 +54,42 @@ module Rainman
     #
     # Returns the value of the method call.
     def method_missing(method, *args, &block)
-      init = config.has_key?(:initialize) ? config[:initialize] : true
-      hand = init ? handler.new : handler
-
-      if hand.respond_to?(method)
-        hand.send(method, *args, &block)
+      if handler_instance.respond_to?(method)
+        handler_instance.send(method, *args, &block)
       else
         super
       end
+    end
+
+    private
+
+    # Private: Get the handler's initializer. This can be a proc or non-nil
+    # object. Defaults to true.
+    def handler_initializer
+      @handler_initializer ||=
+        config.has_key?(:initialize) ? config[:initialize] : true
+    end
+
+    # Private: Creates/returns a new handler instance.
+    #
+    # If the handler_initializer is a proc, it is called with the handler
+    # class as a parameter. This allows the handler to be initialized with
+    # methods other than #new.
+    #
+    # If the handler_initializer is non-nil (but not a proc), the handler is
+    # initialized by calling handler.new.
+    #
+    # If the handler_initializer is falsey (nil or calse), the handler is
+    # **not** initialized. Instead, the handler class itself is returned. This
+    # is useful for using handlers that are singleton modules/classes.
+    def handler_instance
+      @handler_instance ||= if handler_initializer.respond_to?(:call)
+                              handler_initializer.call(handler)
+                            elsif handler_initializer
+                              handler.new
+                            else
+                              handler
+                            end
     end
   end
 end
