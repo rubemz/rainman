@@ -12,7 +12,7 @@ require 'domain/opensrs/nameservers'
 module Domain
   extend Rainman::Driver
 
-  register_handler :enom
+  register_handler :enom, :initialize => false
 
   register_handler :opensrs
 

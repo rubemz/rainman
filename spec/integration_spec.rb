@@ -4,10 +4,14 @@ require File.expand_path('../../example/domain.rb', __FILE__)
 describe "Rainman integration" do
   describe Domain do
     describe "handlers" do
-      subject { Domain.handlers }
-
-      its([:enom])    { should == Domain::Enom }
-      its([:opensrs]) { should == Domain::Opensrs }
+      [:enom, :opensrs].each do |hand|
+        describe hand do
+          subject       { Domain.handlers[hand] }
+          it            { should be_a Rainman::Runner }
+          its(:config)  { should be_a Hash }
+          its(:handler) { should == "Domain::#{hand.to_s.capitalize}".constantize }
+        end
+      end
     end
 
     its(:default_handler) { should == :opensrs }
