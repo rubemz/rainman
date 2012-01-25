@@ -141,7 +141,7 @@ module Rainman
     # Returns the handler Class.
     def register_handler(name, opts = {})
       klass = opts.delete(:class_name) || "#{self.name}::#{name.to_s.camelize}"
-      Runner.new(name, klass.to_s.constantize, self, opts)
+      handlers[name] = Runner.new(name, klass.to_s.constantize, self, opts)
     end
 
     # Private: Create a new namespace.

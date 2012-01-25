@@ -22,16 +22,6 @@ describe Rainman::Runner do
     its(:config)  { should eql(config) }
   end
 
-  describe "#initialize" do
-    it "adds new object to @driver.handlers" do
-      expect do
-        Rainman::Runner.new(:hello2, handler, driver)
-      end.to change { driver.handlers.count }.by(1)
-
-      driver.handlers.should have_key(:hello2)
-    end
-  end
-
   describe "#method_missing" do
     it "should delegate to the handler" do
       args = { :arg => 1 }
@@ -40,5 +30,33 @@ describe Rainman::Runner do
     end
 
     it { expect { subject.missing }.to raise_error(NoMethodError) }
+  end
+
+  describe "#handler_initializer" do
+    it "returns @handler_initializer" do
+      blk = lambda { |h| :block! }
+      run = Rainman::Runner.new(:hello2, handler, driver, &blk)
+      run.send(:handler_initializer).should eq(blk)
+    end
+  end
+
+  describe "#handler_instance" do
+    it "initializes a new handler with #handler_initializer" do
+      blk = lambda { |h| :block! }
+      run = Rainman::Runner.new(:hello2, handler, driver, &blk)
+      run.send(:handler_initializer).should_receive(:call).with(handler)
+      run.send(:handler_instance)
+    end
+
+    it "initializes a new handler with #new when #handler_initializer is true" do
+      run = Rainman::Runner.new(:hello2, handler, driver)
+      handler.should_receive(:new)
+      run.send(:handler_instance)
+    end
+
+    it "returns the handler class when #handler_initializer is falsey" do
+      run = Rainman::Runner.new(:hello2, handler, driver, :initialize => false)
+      run.send(:handler_instance).should == handler
+    end
   end
 end

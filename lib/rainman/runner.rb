@@ -41,7 +41,6 @@ module Rainman
       @driver  = driver
       @config  = config
 
-      @driver.handlers[name] = self
     end
 
     # Internal: Method missing hook used to proxy methods to a handler.
