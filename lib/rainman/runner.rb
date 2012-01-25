@@ -30,10 +30,14 @@ module Rainman
     # config  - An optional Hash containing config parameters available
     #           throughout a Runner instance.
     #
+    # If a block is given, it is used to initialize the handler class.
+    #
     # Examples
     #
-    #   Runner.new(:domain, DomainHandler, Domain).tap do |r|
-    #     r.transfer
+    #   Runner.new(:domain, DomainHandler, Domain)
+    #
+    #   Runner.new(:domain, DomainHandler, Domain) do |dom_handler|
+    #     dom_handler.create_domain
     #   end
     def initialize(name, handler, driver, config = {}, &block)
       @name    = name
@@ -55,7 +59,13 @@ module Rainman
     # Returns the value of the method call.
     def method_missing(method, *args, &block)
       if handler_instance.respond_to?(method)
-        handler_instance.send(method, *args, &block)
+        if driver.actions.include?(method)
+          handler_instance.send(method, *args, &block)
+        else
+          raise UnregisteredAction, method
+        end
+      elsif driver.respond_to?(:namespaces) && driver.namespaces.include?(method)
+        driver.send(method)
       else
         super
       end
@@ -79,7 +89,7 @@ module Rainman
     # If the handler_initializer is non-nil (but not a proc), the handler is
     # initialized by calling handler.new.
     #
-    # If the handler_initializer is falsey (nil or calse), the handler is
+    # If the handler_initializer is falsey (nil or false), the handler is
     # **not** initialized. Instead, the handler class itself is returned. This
     # is useful for using handlers that are singleton modules/classes.
     def handler_instance

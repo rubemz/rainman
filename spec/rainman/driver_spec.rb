@@ -51,7 +51,7 @@ describe "Rainman::Driver" do
         :hello1 => @hello1,
         :hello2 => @hello2
       )
-      @module.stub(:current_handler).and_return(:hello2)
+      @module.set_current_handler :hello2
     end
 
     it "yields the given handler" do
@@ -205,13 +205,11 @@ describe "Rainman::Driver" do
     end
   end
 
-  describe "#namespace", pending: true do
+  describe "#namespace" do
     def create_ns_class(name, base)
       klass = Class.new do
-        def hi; self.class.handler_name; end
+        def hi; self.class.to_s; end
         def bye; :nonono!; end
-        def self.handler_name; name; end
-        def self.validations; { :global => Rainman::Option.new(:global) }; end
       end
 
       set_const(base, name.to_s.camelize.to_sym, klass)
@@ -242,12 +240,12 @@ describe "Rainman::Driver" do
         ivar = @module.instance_variable_get(:@bob)
         ivar.should be_a(Hash)
         ivar.should have_key(name)
-        ivar[name].should be_a(Module)
+        ivar[name].should be_a(Rainman::Runner)
       end
     end
 
     it "raises exception calling a method that isn't registered" do
-      expect { @module.bob.bye }.to raise_error(NoMethodError)
+      expect { @module.bob.bye }.to raise_error(Rainman::UnregisteredAction)
     end
 
     it "raises no exception calling a method that is registered" do
@@ -259,7 +257,7 @@ describe "Rainman::Driver" do
     end
 
     it "returns an anonymous Module" do
-      @module.bob.should be_a(Module)
+      @module.bob.should be_a(Rainman::Runner)
     end
 
     it "uses the right handler" do

@@ -40,6 +40,10 @@ module Rainman
       end
     end
 
+    def namespaces
+      @namespaces ||= []
+    end
+
     # Public: Temporarily change a Driver's current handler. The handler is
     # changed for the duration of the block supplied. This is useful to
     # perform actions using multiple handlers without changing defaults.
@@ -55,9 +59,18 @@ module Rainman
     # Yields a Runner instance if a block is given.
     #
     # Returns a Runner instance or the result of a block.
-    def with_handler(handler = current_handler)
-      handlers[handler].tap do |h|
-        return yield h if block_given?
+    def with_handler(handler = nil)
+      begin
+        if handler
+          old_handler = current_handler
+          set_current_handler handler
+        end
+
+        handlers[current_handler].tap do |h|
+          return yield h if block_given?
+        end
+      ensure
+        set_current_handler old_handler if handler
       end
     end
 
@@ -169,6 +182,8 @@ module Rainman
     def namespace(name, opts = {}, &block)
       raise MissingBlock, :namespace unless block_given?
 
+      namespaces << name
+
       create_method(name) do
         key = "@#{name}"
 
@@ -184,6 +199,10 @@ module Rainman
               attr_accessor :current_handler
             end
 
+            def self.namespaces
+              @namespaces ||= []
+            end
+
             extend ActionMethods
           end
 
@@ -193,7 +212,7 @@ module Rainman
 
           klass = "#{self.name}::#{current_handler.to_s.camelize}::#{name.to_s.camelize}"
           klass_opts = with_handler.config.merge(opts)
-          ns[current_handler] = Runner.new(name, klass.constantize, self, klass_opts)
+          ns[current_handler] = Runner.new(name, klass.constantize, mod, klass_opts)
         end
 
         ns[current_handler]
@@ -219,6 +238,8 @@ module Rainman
       #
       # Returns a Proc.
       def define_action(name, opts = {})
+        actions << name
+
         create_method(name) do |*args, &block|
           method = opts[:delegate_to] || name
           with_handler.send(method, *args, &block)
@@ -248,6 +269,10 @@ module Rainman
         else
           define_method(method, *args, &block)
         end
+      end
+
+      def actions
+        @actions ||= []
       end
     end
 
