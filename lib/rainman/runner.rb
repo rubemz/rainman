@@ -1,10 +1,11 @@
 module Rainman
-  # The Runner class delegates actions to handlers. It runs validations
-  # before executing the action.
+  # The Runner class acts as a proxy between a driver and it's handlers. Each
+  # handler will have one runner. Method calls are sent to the runner and
+  # delegated to the handler.
   #
   # Examples
   #
-  #   Runner.new(current_handler_instance).tap do |r|
+  #   Runner.new(:domain, DomainHandler, Domain).tap do |r|
   #     r.transfer
   #   end
   class Runner
@@ -22,11 +23,18 @@ module Rainman
 
     # Public: Initialize a runner.
     #
-    # handler - A handler Class instance.
+    # name    - The Symbol name of this Runner. Used to lookup a Runner from
+    #           within a driver.
+    # handler - A handler Class/Module.
+    # driver  - A driver Module.
+    # config  - An optional Hash containing config parameters available
+    #           throughout a Runner instance.
     #
     # Examples
     #
-    #   Runner.new(current_handler_instance)
+    #   Runner.new(:domain, DomainHandler, Domain).tap do |r|
+    #     r.transfer
+    #   end
     def initialize(name, handler, driver, config = {})
       @name    = name
       @handler = handler
