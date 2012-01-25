@@ -16,7 +16,9 @@ describe Rainman::Runner do
   subject        { Rainman::Runner.new(:hello, handler, driver, config) }
 
   context "Accessors" do
+    its(:name)    { should == :hello }
     its(:handler) { should eql(handler) }
+    its(:driver)  { should eql(driver) }
     its(:config)  { should eql(config) }
   end
 
