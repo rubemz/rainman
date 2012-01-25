@@ -19,6 +19,27 @@ module Rainman
       @all ||= []
     end
 
+    # Public: Registered handlers.
+    #
+    # Keys are the handler name (eg: :my_handler); values are the handler
+    # class (eg: MyHandler).
+    #
+    # Raises NoHandler if an attempt to access a key of nil is made, (eg:
+    # handlers[nil]).
+    #
+    # Raises InvalidHandler if an attempt to access an invalid key is made.
+    #
+    # Returns a Hash.
+    def handlers
+      @handlers ||= Hash.new do |hash, key|
+        if key.nil?
+          raise NoHandler
+        else
+          raise InvalidHandler, key
+        end
+      end
+    end
+
     # Public: Temporarily change a Driver's current handler. The handler is
     # changed for the duration of the block supplied. This is useful to
     # perform actions using multiple handlers without changing defaults.
@@ -35,7 +56,7 @@ module Rainman
     #
     # Returns a Runner instance or the result of a block.
     def with_handler(handler = current_handler)
-      Runner.handlers[handler].tap do |h|
+      handlers[handler].tap do |h|
         return yield h if block_given?
       end
     end

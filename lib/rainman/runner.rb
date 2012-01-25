@@ -14,29 +14,11 @@ module Rainman
     # Public: Gets the handler Class.
     attr_reader :handler
 
+    # Public: Gets the handler's driver
+    attr_reader :driver
+
     # Public: Gets the handler config
     attr_reader :config
-
-    # Public: Registered handlers.
-    #
-    # Keys are the handler name (eg: :my_handler); values are the handler
-    # class (eg: MyHandler).
-    #
-    # Raises NoHandler if an attempt to access a key of nil is made, (eg:
-    # handlers[nil]).
-    #
-    # Raises InvalidHandler if an attempt to access an invalid key is made.
-    #
-    # Returns a Hash.
-    def self.handlers
-      @handlers ||= Hash.new do |hash, key|
-        if key.nil?
-          raise NoHandler
-        else
-          raise InvalidHandler, key
-        end
-      end
-    end
 
     # Public: Initialize a runner.
     #
@@ -45,13 +27,13 @@ module Rainman
     # Examples
     #
     #   Runner.new(current_handler_instance)
-    def initialize(name, handler, parent = nil, config = {})
+    def initialize(name, handler, driver, config = {})
       @name    = name
       @handler = handler
-      @parent  = parent
+      @driver  = driver
       @config  = config
 
-      self.class.handlers[name] = self
+      @driver.handlers[name] = self
     end
 
     # Internal: Method missing hook used to proxy methods to a handler.

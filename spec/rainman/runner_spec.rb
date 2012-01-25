@@ -2,31 +2,31 @@ require 'spec_helper'
 
 describe Rainman::Runner do
   before do
+    @driver  = mock("Driver")
+    @driver.stub(:handlers).and_return({})
+
     @handler = mock("Handler")
     @handler.stub(:hi).and_return(:salutations)
     @handler.stub(:new).and_return(@handler)
   end
 
+  let(:config)   { { :this => :old_config } }
   let(:handler)  { @handler }
-  let(:handlers) { subject.class.handlers }
-  subject        { Rainman::Runner.new(:hello, handler) }
+  let(:driver)   { @driver }
+  subject        { Rainman::Runner.new(:hello, handler, driver, config) }
 
   context "Accessors" do
     its(:handler) { should eql(handler) }
+    its(:config)  { should eql(config) }
   end
 
-  describe "::handlers" do
-    it "returns a hash" do
-      handlers.should be_a Hash
-      handlers[:hello].should eq subject
-    end
+  describe "#initialize" do
+    it "adds new object to @driver.handlers" do
+      expect do
+        Rainman::Runner.new(:hello2, handler, driver)
+      end.to change { driver.handlers.count }.by(1)
 
-    it "raises exception when accessing an unknown key" do
-      expect { handlers[:foo] }.to raise_error(Rainman::InvalidHandler)
-    end
-
-    it "raises exception when accessing a nil key" do
-      expect { handlers[nil] }.to raise_error(Rainman::NoHandler)
+      driver.handlers.should have_key(:hello2)
     end
   end
 

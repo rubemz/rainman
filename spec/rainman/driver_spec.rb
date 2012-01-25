@@ -28,12 +28,26 @@ describe "Rainman::Driver" do
     end
   end
 
+  describe "#handlers" do
+    it "returns a hash" do
+      @module.handlers.should be_a Hash
+    end
+
+    it "raises exception when accessing an unknown key" do
+      expect { @module.handlers[:foo] }.to raise_error(Rainman::InvalidHandler)
+    end
+
+    it "raises exception when accessing a nil key" do
+      expect { @module.handlers[nil] }.to raise_error(Rainman::NoHandler)
+    end
+  end
+
   describe "#with_handler" do
     before do
       @hello1 = Class.new
       @hello2 = Class.new
 
-      Rainman::Runner.stub(:handlers).and_return(
+      @module.stub(:handlers).and_return(
         :hello1 => @hello1,
         :hello2 => @hello2
       )
