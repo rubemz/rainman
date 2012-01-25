@@ -158,8 +158,39 @@ module Rainman
     #
     # Raises Rainman::MissingBlock if called without a block.
     #
-    # Returns a Module.
+    # Returns a Runner.
     def namespace(name, opts = {}, &block)
+      raise MissingBlock, :namespace unless block_given?
+
+      create_method(name) do
+        key = "@#{name}"
+
+        if instance_variable_defined?(key)
+          ns = instance_variable_get(key)
+        else
+          ns = instance_variable_set(key, {})
+        end
+
+        unless ns[current_handler]
+          mod = Module.new do
+            class << self
+              attr_accessor :current_handler
+            end
+
+            extend ActionMethods
+          end
+
+          mod.current_handler = current_handler
+
+          mod.instance_eval(&block)
+
+          klass = "#{self.name}::#{current_handler.to_s.camelize}::#{name.to_s.camelize}"
+          klass_opts = with_handler.config.merge(opts)
+          ns[current_handler] = Runner.new(name, klass.constantize, self, klass_opts)
+        end
+
+        ns[current_handler]
+      end
     end
 
     # These methods are used to create handler actions.
