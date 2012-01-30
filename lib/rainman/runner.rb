@@ -76,8 +76,7 @@ module Rainman
     # Private: Get the handler's initializer. This can be a proc or non-nil
     # object. Defaults to true.
     def handler_initializer
-      @handler_initializer ||=
-        config.has_key?(:initialize) ? config[:initialize] : true
+      @handler_initializer ||= config.fetch(:initialize, true)
     end
 
     # Private: Creates/returns a new handler instance.
