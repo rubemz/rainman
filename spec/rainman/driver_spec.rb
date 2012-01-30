@@ -1,6 +1,5 @@
 require 'spec_helper'
 
-
 describe "Rainman::Driver" do
   before do
     Rainman::Driver.instance_variable_set(:@all, [])
@@ -132,19 +131,21 @@ describe "Rainman::Driver" do
         def self.name; 'Bob'; end
       end
       @module.const_set(:Bob, @bob)
-      Rainman::Runner.should_receive(:new).with(:bob, MissDaisy::Bob, @module, {})
     end
 
     it "creates a new Runner" do
-      @module.send(:register_handler, :bob)
+      Rainman::Runner.should_receive(:new).with(:miss_daisy, MissDaisy, @module, {})
+      @module.send(:register_handler, :miss_daisy)
     end
 
     describe ":class_name option" do
       it "allows a string" do
+        Rainman::Runner.should_receive(:new).with(:bob, MissDaisy::Bob, @module, {})
         @module.send(:register_handler, :bob, :class_name => 'MissDaisy::Bob')
       end
 
       it "allows a constant" do
+        Rainman::Runner.should_receive(:new).with(:bob, MissDaisy::Bob, @module, {})
         @module.send(:register_handler, :bob, :class_name => MissDaisy::Bob)
       end
     end
@@ -226,8 +227,8 @@ describe "Rainman::Driver" do
       create_ns_class :bob, @module::Abc
       create_ns_class :bob, @module::Xyz
 
-      @module.send(:register_handler, :abc)
-      @module.send(:register_handler, :xyz)
+      @module.send(:register_handler, :abc, :class_name => @module::Abc)
+      @module.send(:register_handler, :xyz, :class_name => @module::Xyz)
       @module.set_default_handler :abc
       @module.send(:namespace, :bob) do
         define_action :hi

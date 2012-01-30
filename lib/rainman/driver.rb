@@ -40,10 +40,6 @@ module Rainman
       end
     end
 
-    def namespaces
-      @namespaces ||= []
-    end
-
     # Public: Temporarily change a Driver's current handler. The handler is
     # changed for the duration of the block supplied. This is useful to
     # perform actions using multiple handlers without changing defaults.
@@ -59,9 +55,9 @@ module Rainman
     # Yields a Runner instance if a block is given.
     #
     # Returns a Runner instance or the result of a block.
-    def with_handler(handler = nil)
+    def with_handler(handler = current_handler)
       begin
-        if handler
+        if handler != current_handler
           old_handler = current_handler
           set_current_handler handler
         end
@@ -70,7 +66,7 @@ module Rainman
           return yield h if block_given?
         end
       ensure
-        set_current_handler old_handler if handler
+        set_current_handler old_handler if old_handler
       end
     end
 
@@ -145,10 +141,11 @@ module Rainman
     #
     # name  - The Symbol handler name.
     # opts  - A Hash containing optional arguments:
-    #        :class_name - The class name to use.
+    #         :class_name - The class name to use.
     # block - An optional block; if supplied it is set as the runner's
     #         handler_initializer and will be called when the runner
-    #         initializes a handler class.
+    #         initializes a handler class. Note that the block must return
+    #         either the handler class or a handler class instance.
     #
     # Examples
     #
@@ -160,7 +157,7 @@ module Rainman
     #
     # Returns the handler Class.
     def register_handler(name, opts = {}, &block)
-      klass = opts.delete(:class_name) || "#{self.name}::#{name.to_s.camelize}"
+      klass = opts.delete(:class_name) || "::#{name.to_s.camelize}"
       handlers[name] = Runner.new(name, klass.to_s.constantize, self, opts, &block)
     end
 
@@ -198,11 +195,6 @@ module Rainman
             class << self
               attr_accessor :current_handler
             end
-
-            def self.namespaces
-              @namespaces ||= []
-            end
-
             extend ActionMethods
           end
 
@@ -221,6 +213,22 @@ module Rainman
 
     # These methods are used to create handler actions.
     module ActionMethods
+      # Public: Namespaces that have been registered.
+      #
+      # Returns an Array of Symbols.
+      def namespaces
+        @namespaces ||= []
+      end
+      public :namespaces
+
+      # Public: The actions the current driver has registered.
+      #
+      # Returns an Array of Symbols.
+      def actions
+        @actions ||= []
+      end
+      public :actions
+
       # Private: Define a new action.
       #
       # name - The Symbol handler name.
@@ -269,10 +277,6 @@ module Rainman
         else
           define_method(method, *args, &block)
         end
-      end
-
-      def actions
-        @actions ||= []
       end
     end
 
