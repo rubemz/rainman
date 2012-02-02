@@ -14,6 +14,11 @@ describe "Rainman support" do
     "some_module/some_class".camelize.should == "SomeModule::SomeClass"
   end
 
+  describe "String#underscore" do
+    "FooBar".underscore.should == "foo_bar"
+    "SomeModule::SomeClass".underscore.should == "some_module/some_class"
+  end
+
   describe "Hash#reverse_merge" do
     a = { :first => :ABC, :a => :a }
     b = { :first => :XYZ, :b => :b }

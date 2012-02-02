@@ -36,6 +36,26 @@ class String
       self[0].chr.downcase + camelize(self)[1..-1]
     end
   end unless respond_to?(:camelize)
+
+  # Makes an underscored, lowercase form from the expression in the string.
+  #
+  # Changes '::' to '/' to convert namespaces to paths.
+  #
+  # Examples:
+  #   "ActiveModel".underscore         # => "active_model"
+  #   "ActiveModel::Errors".underscore # => "active_model/errors"
+  #
+  # As a rule of thumb you can think of +underscore+ as the inverse of +camelize+,
+  # though there are cases where that does not hold:
+  #
+  #   "SSLError".underscore.camelize # => "SslError"
+  def underscore
+    gsub(/::/, '/').
+      gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
+      gsub(/([a-z\d])([A-Z])/,'\1_\2').
+      tr("-", "_").
+      downcase
+  end
 end
 
 # From lib/active_support/core_ext/hash/reverse_merge.rb
