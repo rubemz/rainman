@@ -17,7 +17,7 @@ module Domain
     :class_name => Domain::Enom,
     :initialize => false
 
-  register_handler :opensrs
+  register_handler :opensrs, :class_name => Domain::Opensrs
 
   namespace :nameservers do
     define_action :list
