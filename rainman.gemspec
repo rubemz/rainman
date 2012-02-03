@@ -14,7 +14,7 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = Rainman::VERSION
 
-  gem.add_development_dependency 'rspec', '~> 2.7.0'
+  gem.add_development_dependency 'rspec', '~> 2.8.0'
   gem.add_development_dependency 'autotest-standalone', '~> 4.5.8'
   gem.add_development_dependency 'rake', '~> 0.9.2.2'
 end
