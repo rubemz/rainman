@@ -158,6 +158,7 @@ module Rainman
     # Returns the handler Class.
     def register_handler(name, opts = {}, &block)
       klass = opts.delete(:class_name) || "::#{name.to_s.camelize}"
+      create_handler_predicate_method name
       handlers[name] = Runner.new(name, klass.to_s.constantize, self, opts, &block)
     end
 
@@ -208,6 +209,27 @@ module Rainman
         end
 
         ns[current_handler]
+      end
+    end
+
+    # Private: Create predicate method for the given handler.
+    #
+    # handler_name - The name of the handler
+    #
+    # Example:
+    #
+    #   create_handler_predicate_method :blah
+    #
+    # Creates the method:
+    #
+    #   blah?
+    #
+    # Which returns true if the current handler is :blah.
+    #
+    # Returns a Proc.
+    def create_handler_predicate_method(handler_name)
+      create_method "#{handler_name}?" do
+        current_handler == handler_name
       end
     end
 

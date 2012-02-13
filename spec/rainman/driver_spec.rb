@@ -148,6 +148,20 @@ describe "Rainman::Driver" do
         Rainman::Runner.should_receive(:new).with(:bob, MissDaisy::Bob, @module, {})
         @module.send(:register_handler, :bob, :class_name => MissDaisy::Bob)
       end
+
+      it "creates predicate methods" do
+        Rainman::Runner.should_receive(:new).with(:bob, MissDaisy::Bob, @module, {})
+        @module.send(:register_handler, :bob, :class_name => MissDaisy::Bob)
+        @module.should respond_to :bob?
+      end
+    end
+  end
+
+  describe "#create_handler_predicate_method" do
+    it "adds predicate method" do
+      @module.should_not respond_to :bob?
+      @module.send(:create_handler_predicate_method, :bob)
+      @module.should respond_to :bob?
     end
   end
 
