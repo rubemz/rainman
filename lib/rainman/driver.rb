@@ -238,19 +238,27 @@ module Rainman
       #        :alias       - If supplied, an alias will be created for the
       #                       defined method.
       #
-      # Example
+      # If a block is supplied, it is used to filter parameters when the
+      # action is invoked.
       #
-      #   define_action :blah
+      # Examples
+      #
+      #   define_action :create
       #
       #   define_action :destroy, :alias => :delete
       #
+      #   define_action :list do |*args|
+      #     args.delete_if &:nil?
+      #   end
+      #
       # Returns a Proc.
-      def define_action(name, opts = {})
+      def define_action(name, opts = {}, &blk)
         actions << name
 
         create_method(name) do |*args, &block|
+          hargs  = blk ? blk.call(*args) : args
           method = opts[:delegate_to] || name
-          with_handler.send(method, *args, &block)
+          with_handler.send(method, *hargs, &block)
         end
 
         alias_method opts[:alias], name if opts[:alias]

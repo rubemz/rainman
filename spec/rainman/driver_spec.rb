@@ -155,7 +155,7 @@ describe "Rainman::Driver" do
     before do
       @klass = Class.new do
         def blah; :blah; end
-        def desc; :bob_is_cool!; end
+        def desc(*a); :bob_is_cool!; end
       end
       @module.stub(:with_handler).and_return(@klass.new)
     end
@@ -184,6 +184,15 @@ describe "Rainman::Driver" do
       @module.should_not respond_to(:desc)
 
       @module.description.should == :bob_is_cool!
+    end
+
+    it "overrides *args" do
+      @module.send(:define_action, :desc) do |*args|
+        [:return, :to, :me]
+      end
+
+      @module.with_handler.should_receive(:desc).with(:return, :to, :me)
+      @module.desc :a, :b
     end
   end
 
