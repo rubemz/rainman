@@ -3,7 +3,7 @@ module Domain
   class Enom::Nameservers
 
     # List domain nameservers
-    def list(*a)
+    def self.list(*a)
       :enom_ns_list
     end
   end

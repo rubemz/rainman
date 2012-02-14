@@ -2,6 +2,7 @@ require 'rainman'
 
 # Load handlers
 $:.unshift File.expand_path('..', __FILE__)
+
 require 'domain/enom'
 require 'domain/enom/nameservers'
 require 'domain/opensrs'
@@ -12,9 +13,11 @@ require 'domain/opensrs/nameservers'
 module Domain
   extend Rainman::Driver
 
-  register_handler :enom
+  register_handler :enom,
+    :class_name => Domain::Enom,
+    :initialize => false
 
-  register_handler :opensrs
+  register_handler :opensrs, :class_name => Domain::Opensrs
 
   namespace :nameservers do
     define_action :list

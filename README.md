@@ -202,6 +202,14 @@ Domain.transfer # transfer an :abc domain
 It is highly suggested you stick to using `with_handler` unless you have a
 reason.
 
+Convenience predicate methods are added for each handler to determine if it is
+in use:
+
+```ruby
+Domain.abc?
+Domain.xyz?
+```
+
 ### Including drivers in other classes
 
 A driver can be included in another class and its actions are available as

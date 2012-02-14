@@ -41,8 +41,8 @@ module Rainman
     end
 
     # Public: Temporarily change a Driver's current handler. The handler is
-    # changed for the duration of the block supplied. This is useful to perform
-    # actions using multiple handlers without changing defaults.
+    # changed for the duration of the block supplied. This is useful to
+    # perform actions using multiple handlers without changing defaults.
     #
     # name - The Symbol name of the handler to use.
     #
@@ -55,16 +55,18 @@ module Rainman
     # Yields a Runner instance if a block is given.
     #
     # Returns a Runner instance or the result of a block.
-    def with_handler(name, &block)
-      raise MissingBlock, :with_handler unless block_given?
-
-      old_handler = current_handler
-
+    def with_handler(handler = current_handler)
       begin
-        set_current_handler name
-        yield current_handler_instance.runner
+        if handler != current_handler
+          old_handler = current_handler
+          set_current_handler handler
+        end
+
+        handlers[current_handler].tap do |h|
+          return yield h if block_given?
+        end
       ensure
-        set_current_handler old_handler
+        set_current_handler old_handler if old_handler
       end
     end
 
@@ -120,28 +122,8 @@ module Rainman
     #
     # Returns nothing.
     def included(base)
-      base.extend(::Forwardable)
+      base.extend ::Forwardable
       base.def_delegators self, *singleton_methods
-    end
-
-    # Private: A hash containing handler instances. This prevents handlers
-    # from being initialized multiple times in a single session.
-    #
-    # Returns a Hash containing instances of handlers that have been
-    # initialized.
-    def handler_instances
-      @handler_instances ||= {}
-    end
-
-    # Private: Get or set an instance of the current handler class. This
-    # method stores the instance in handler_instances, and should be used
-    # instead of manually initializing handlers.
-    #
-    # Returns an instance of the current handler class.
-    def current_handler_instance
-      handler_instances[current_handler] ||= handlers[current_handler].new.tap do |_handler|
-        _handler.setup_handler if _handler.respond_to?(:setup_handler)
-      end
     end
 
     # Private: Get the current handler in use by this Driver.
@@ -157,23 +139,27 @@ module Rainman
     # If a block is given it is evaluated within the context of the handler
     # Class.
     #
-    # name - The Symbol handler name.
-    # opts - A Hash containing optional arguments:
-    #        :class_name - The class name to use.
+    # name  - The Symbol handler name.
+    # opts  - A Hash containing optional arguments:
+    #         :class_name - The class name to use.
+    # block - An optional block; if supplied it is set as the runner's
+    #         handler_initializer and will be called when the runner
+    #         initializes a handler class. Note that the block must return
+    #         either the handler class or a handler class instance.
     #
     # Examples
     #
     #   register_handler :bob
     #
+    #   register_handler :barry do |barry|
+    #     barry.create
+    #   end
+    #
     # Returns the handler Class.
-    def register_handler(name, opts = {})
-      opts.reverse_merge!(
-        :class_name => "#{self.name}::#{name.to_s.camelize}"
-      )
-
-      klass = opts[:class_name].to_s.constantize
-
-      handlers[name] = inject_handler_methods(klass, name.to_sym)
+    def register_handler(name, opts = {}, &block)
+      klass = opts.delete(:class_name) || "::#{name.to_s.camelize}"
+      create_handler_predicate_method name
+      handlers[name] = Runner.new(name, klass.to_s.constantize, self, opts, &block)
     end
 
     # Private: Create a new namespace.
@@ -190,9 +176,11 @@ module Rainman
     #
     # Raises Rainman::MissingBlock if called without a block.
     #
-    # Returns a Module.
+    # Returns a Runner.
     def namespace(name, opts = {}, &block)
       raise MissingBlock, :namespace unless block_given?
+
+      namespaces << name
 
       create_method(name) do
         key = "@#{name}"
@@ -205,43 +193,64 @@ module Rainman
 
         unless ns[current_handler]
           mod = Module.new do
-            extend self
-            extend ActionMethods
             class << self
-              attr_accessor :current_handler_instance
+              attr_accessor :current_handler
             end
+            extend ActionMethods
           end
 
-          klass = current_handler_instance.class.const_get(name.to_s.camelize)
-          mod.current_handler_instance = inject_handler_methods(klass, name).new
+          mod.current_handler = current_handler
 
           mod.instance_eval(&block)
-          ns[current_handler] = mod
+
+          klass = "#{self.name}::#{current_handler.to_s.camelize}::#{name.to_s.camelize}"
+          klass_opts = with_handler.config.merge(opts)
+          ns[current_handler] = Runner.new(name, klass.constantize, mod, klass_opts)
         end
 
         ns[current_handler]
       end
     end
 
-    # Private: Injects Handler methods into the given class/module.
+    # Private: Create predicate method for the given handler.
     #
-    # base           - The base Class/Module.
-    # handler_name   - The Symbol name of the handler class.
+    # handler_name - The name of the handler
     #
-    # Example
+    # Example:
     #
-    #   inject_handler_methods(SomeHandler, :some_handler)
+    #   create_handler_predicate_method :blah
     #
-    # Returns base Class/Module.
-    def inject_handler_methods(base, handler_name)
-      base.extend(Handler)
-      base.instance_variable_set(:@handler_name, handler_name)
-      base.instance_variable_set(:@parent_klass, self)
-      base
+    # Creates the method:
+    #
+    #   blah?
+    #
+    # Which returns true if the current handler is :blah.
+    #
+    # Returns a Proc.
+    def create_handler_predicate_method(handler_name)
+      create_method "#{handler_name}?" do
+        current_handler == handler_name
+      end
     end
 
     # These methods are used to create handler actions.
     module ActionMethods
+      # Public: Namespaces that have been registered.
+      #
+      # Returns an Array of Symbols.
+      def namespaces
+        @namespaces ||= []
+      end
+      public :namespaces
+
+      # Public: The actions the current driver has registered.
+      #
+      # Returns an Array of Symbols.
+      def actions
+        @actions ||= []
+      end
+      public :actions
+
       # Private: Define a new action.
       #
       # name - The Symbol handler name.
@@ -251,17 +260,27 @@ module Rainman
       #        :alias       - If supplied, an alias will be created for the
       #                       defined method.
       #
-      # Example
+      # If a block is supplied, it is used to filter parameters when the
+      # action is invoked.
       #
-      #   define_action :blah
+      # Examples
+      #
+      #   define_action :create
       #
       #   define_action :destroy, :alias => :delete
       #
+      #   define_action :list do |*args|
+      #     args.delete_if &:nil?
+      #   end
+      #
       # Returns a Proc.
-      def define_action(name, opts = {})
+      def define_action(name, opts = {}, &blk)
+        actions << name
+
         create_method(name) do |*args, &block|
+          hargs  = blk ? blk.call(*args) : args
           method = opts[:delegate_to] || name
-          current_handler_instance.runner.send(method, *args, &block)
+          with_handler.send(method, *hargs, &block)
         end
 
         alias_method opts[:alias], name if opts[:alias]

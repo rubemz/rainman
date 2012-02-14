@@ -1,62 +1,51 @@
 module Rainman
-  # The Runner class delegates actions to handlers. It runs validations
-  # before executing the action.
+  # The Runner class acts as a proxy between a driver and it's handlers. Each
+  # handler will have one runner. Method calls are sent to the runner and
+  # delegated to the handler.
   #
   # Examples
   #
-  #   Runner.new(current_handler_instance).tap do |r|
+  #   Runner.new(:domain, DomainHandler, Domain).tap do |r|
   #     r.transfer
   #   end
   class Runner
+    # Public: Get the handler name (as an underscored Symbol).
+    attr_reader :name
+
     # Public: Gets the handler Class.
     attr_reader :handler
 
+    # Public: Gets the handler's driver
+    attr_reader :driver
+
+    # Public: Gets the handler config
+    attr_reader :config
+
     # Public: Initialize a runner.
     #
-    # handler - A handler Class instance.
+    # name    - The Symbol name of this Runner. Used to lookup a Runner from
+    #           within a driver.
+    # handler - A handler Class/Module.
+    # driver  - A driver Module.
+    # config  - An optional Hash containing config parameters available
+    #           throughout a Runner instance.
+    #
+    # If a block is given, it is used to initialize the handler class.
     #
     # Examples
     #
-    #   Runner.new(current_handler_instance)
-    def initialize(handler)
-      @handler = handler
-    end
-
-    # Public: Get the Symbol name of the handler.
+    #   Runner.new(:domain, DomainHandler, Domain)
     #
-    # Returns a Symbol.
-    def name
-      handler.class.handler_name
-    end
-
-    # Public: Get the handler's parent_klass
-    #
-    # Returns Rainman::Driver.self
-    def parent_klass
-      handler.class.parent_klass
-    end
-
-    # Public: Delegates the given method to the handler.
-    #
-    # context - Set the context for the method (class/instance)
-    # method  - The method to send to the handler.
-    # args    - Arguments to be supplied to the method (optional).
-    # block   - Block to be supplied to the method (optional).
-    #
-    # Examples
-    #
-    #   execute(handler, :register)
-    #   execute(handler.parent_class, :register, { params: [] })
-    #   execute(handler, :register, :one, :argument) do
-    #     # some code
+    #   Runner.new(:domain, DomainHandler, Domain) do |dom_handler|
+    #     dom_handler.create_domain
     #   end
-    #
-    # Raises MissingParameter if validation fails due to missing parameters.
-    #
-    # Returns the result of the handler action.
-    def execute(context, method, *args, &block)
-      # verify params here
-      context.send(method, *args, &block)
+    def initialize(name, handler, driver, config = {}, &block)
+      @name    = name
+      @handler = handler
+      @driver  = driver
+      @config  = config
+
+      @handler_initializer = block if block_given?
     end
 
     # Internal: Method missing hook used to proxy methods to a handler.
@@ -67,15 +56,49 @@ module Rainman
     #
     # Raises NameError if handler does not respond to method.
     #
-    # Returns the value of execute.
+    # Returns the value of the method call.
     def method_missing(method, *args, &block)
-      if handler.respond_to?(method)
-        execute(handler, method, *args, &block)
-      elsif parent_klass.respond_to?(method)
-        execute(parent_klass, method, *args, &block)
+      if handler_instance.respond_to?(method)
+        if driver.actions.include?(method)
+          handler_instance.send(method, *args, &block)
+        else
+          raise UnregisteredAction, method
+        end
+      elsif driver.respond_to?(:namespaces) && driver.namespaces.include?(method)
+        driver.send(method)
       else
         super
       end
+    end
+
+    private
+
+    # Private: Get the handler's initializer. This can be a proc or non-nil
+    # object. Defaults to true.
+    def handler_initializer
+      @handler_initializer ||= config.fetch(:initialize, true)
+    end
+
+    # Private: Creates/returns a new handler instance.
+    #
+    # If the handler_initializer is a proc, it is called with the handler
+    # class as a parameter. This allows the handler to be initialized with
+    # methods other than #new.
+    #
+    # If the handler_initializer is non-nil (but not a proc), the handler is
+    # initialized by calling handler.new.
+    #
+    # If the handler_initializer is falsey (nil or false), the handler is
+    # **not** initialized. Instead, the handler class itself is returned. This
+    # is useful for using handlers that are singleton modules/classes.
+    def handler_instance
+      @handler_instance ||= if handler_initializer.respond_to?(:call)
+                              handler_initializer.call(handler)
+                            elsif handler_initializer
+                              handler.new
+                            else
+                              handler
+                            end
     end
   end
 end

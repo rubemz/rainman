@@ -33,4 +33,8 @@ describe "Rainman Exceptions" do
   test_exception :MissingBlock,
     :args    => :blah,
     :message => "Can't call :blah without a block!"
+
+  test_exception :UnregisteredAction,
+    :args    => :blah,
+    :message => "Unregistered action, :blah"
 end

@@ -40,4 +40,12 @@ module Rainman
       super "Can't call #{method.inspect} without a block!"
     end
   end
+
+  # UnregisteredAction is raised when trying to run an handler action that
+  # hasn't been registered.
+  class UnregisteredAction < StandardError
+    def initialize(method)
+      super "Unregistered action, #{method.inspect}"
+    end
+  end
 end

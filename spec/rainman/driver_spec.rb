@@ -1,6 +1,5 @@
 require 'spec_helper'
 
-
 describe "Rainman::Driver" do
   before do
     Rainman::Driver.instance_variable_set(:@all, [])
@@ -29,8 +28,8 @@ describe "Rainman::Driver" do
   end
 
   describe "#handlers" do
-    it "returns an empty hash" do
-      @module.handlers.should == {}
+    it "returns a hash" do
+      @module.handlers.should be_a Hash
     end
 
     it "raises exception when accessing an unknown key" do
@@ -44,34 +43,34 @@ describe "Rainman::Driver" do
 
   describe "#with_handler" do
     before do
-      @klass = Class.new do
-        def hi; :hi_handler!; end
-        def self.handler_name; :blah; end
+      @hello1 = Class.new
+      @hello2 = Class.new
+
+      @module.stub(:handlers).and_return(
+        :hello1 => @hello1,
+        :hello2 => @hello2
+      )
+      @module.set_current_handler :hello2
+    end
+
+    it "yields the given handler" do
+      @module.with_handler :hello1  do |h|
+        h.should eq @hello1
       end
-      @handler = @klass.new
-      runner = Rainman::Runner.new(@handler)
-      @handler.stub(:runner).and_return(runner)
-      @module.stub(:current_handler_instance).and_return(@handler)
     end
 
-    it "should temporarily change the current handler" do
-      old_handler = :old_lady
-      @module.should_receive(:set_current_handler).with(:blah)
-      @module.should_receive(:set_current_handler).with(old_handler)
-      @module.stub(:current_handler).and_return(old_handler)
-      @module.with_handler(:blah) {}
-    end
-
-    it "should raise an error without a block" do
-      expect { @module.with_handler(:blah) }.to raise_error(Rainman::MissingBlock)
-    end
-
-    it "yields the runner" do
-      res = @module.with_handler :blah do |runner|
-        runner.should be_a(Rainman::Runner)
-        runner.hi
+    it "yields the default handler without a name" do |h|
+      @module.with_handler do |h|
+        h.should eq @hello2
       end
-      res.should == :hi_handler!
+    end
+
+    it "returns the block value" do
+      @module.with_handler { |h| :res }.should == :res
+    end
+
+    it "returns the handler if no block is given" do
+      @module.with_handler.should eq @hello2
     end
   end
 
@@ -104,66 +103,12 @@ describe "Rainman::Driver" do
     end
   end
 
-  describe "#handler_instances" do
-    it "returns @handler_instances" do
-      @module.send(:handler_instances).should == {}
-      @module.instance_variable_set(:@handler_instances, { :foo => :test })
-      @module.send(:handler_instances).should == { :foo => :test }
-    end
-
-    it "should call handler_setup if it exists" do
-      module MissDaisy
-        extend Rainman::Driver
-        class WithSetup
-          attr_reader :setup
-
-          def setup_handler
-            @setup = true
-          end
-        end
-
-        class WithoutSetup
-          attr_reader :setup
-        end
-
-        register_handler :with_setup
-        register_handler :without_setup
-        define_action :setup
-      end
-
-      MissDaisy.set_current_handler :with_setup
-      MissDaisy.setup.should be_true
-      MissDaisy.set_current_handler :without_setup
-      MissDaisy.setup.should_not be_true
-    end
-  end
-
   describe "#set_current_handler" do
     it "sets @current_handler" do
       @module.set_current_handler :blah
       @module.instance_variable_get(:@current_handler).should == :blah
       @module.set_current_handler :other
       @module.instance_variable_get(:@current_handler).should == :other
-    end
-  end
-
-  describe "#current_handler_instance" do
-    before do
-      @class = Class.new
-      @klass = @class.new
-      @module.handlers[:abc] = @class
-      @module.send(:set_current_handler, :abc)
-    end
-
-    it "returns the handler instance" do
-      @module.send(:handler_instances).merge!(:abc => @klass)
-      @module.send(:current_handler_instance).should == @klass
-    end
-
-    it "sets the handler instance" do
-      @module.handlers[:abc] = @class
-      @class.should_receive(:new).and_return(@klass)
-      @module.send(:current_handler_instance).should be_a(@class)
     end
   end
 
@@ -188,54 +133,53 @@ describe "Rainman::Driver" do
       @module.const_set(:Bob, @bob)
     end
 
-    it "adds the handler to handlers" do
-      @module.send(:register_handler, :bob)
-      @module.handlers.should have_key(:bob)
-      @module.handlers[:bob].should == @bob
-    end
-
-    it "extends handler with handler methods" do
-      @bob.should_receive(:extend).with(Rainman::Handler)
-      @module.send(:register_handler, :bob)
+    it "creates a new Runner" do
+      Rainman::Runner.should_receive(:new).with(:miss_daisy, MissDaisy, @module, {})
+      @module.send(:register_handler, :miss_daisy)
     end
 
     describe ":class_name option" do
       it "allows a string" do
+        Rainman::Runner.should_receive(:new).with(:bob, MissDaisy::Bob, @module, {})
         @module.send(:register_handler, :bob, :class_name => 'MissDaisy::Bob')
-        @module.handlers.should have_key(:bob)
-        @module.handlers[:bob].should == @bob
       end
 
       it "allows a constant" do
+        Rainman::Runner.should_receive(:new).with(:bob, MissDaisy::Bob, @module, {})
         @module.send(:register_handler, :bob, :class_name => MissDaisy::Bob)
-        @module.handlers.should have_key(:bob)
-        @module.handlers[:bob].should == @bob
       end
+
+      it "creates predicate methods" do
+        Rainman::Runner.should_receive(:new).with(:bob, MissDaisy::Bob, @module, {})
+        @module.send(:register_handler, :bob, :class_name => MissDaisy::Bob)
+        @module.should respond_to :bob?
+      end
+    end
+  end
+
+  describe "#create_handler_predicate_method" do
+    it "adds predicate method" do
+      @module.should_not respond_to :bob?
+      @module.send(:create_handler_predicate_method, :bob)
+      @module.should respond_to :bob?
     end
   end
 
   describe "#define_action" do
     before do
       @klass = Class.new do
-        def self.name; 'Bob'; end
-        def profile; :bob_is_cool; end
-        def self.parent_klass; end
+        def blah; :blah; end
+        def desc(*a); :bob_is_cool!; end
       end
-
-      @module.const_set(:Bob, @klass)
-
-      @runner = Rainman::Runner.new(MissDaisy::Bob.new)
-      @klass.stub(:runner).and_return(@runner)
-      @module.stub(:current_handler_instance).and_return(@klass)
+      @module.stub(:with_handler).and_return(@klass.new)
     end
 
     it "creates the method" do
       @module.should_not respond_to(:blah)
       @module.send(:define_action, :blah)
       @module.should respond_to(:blah)
-      @runner.should_receive(:send).with(:blah)
 
-      @module.blah
+      @module.blah.should == :blah
     end
 
     it "aliases the method if :alias is supplied" do
@@ -243,14 +187,26 @@ describe "Rainman::Driver" do
       @module.send(:define_action, :blah, :alias => :superBLAH)
       @module.should respond_to(:blah)
       @module.should respond_to(:superBLAH)
-      @runner.stub(:blah).and_return(:this_is_the_blah)
-      @module.superBLAH.should == :this_is_the_blah
+
+      @module.blah.should == :blah
+      @module.superBLAH.should == :blah
     end
 
     it "delegates the method if :delegate_to is supplied" do
-      @module.send(:define_action, :description, :delegate_to => :profile)
+      @module.send(:define_action, :description, :delegate_to => :desc)
       @module.should respond_to(:description)
-      @module.description.should == :bob_is_cool
+      @module.should_not respond_to(:desc)
+
+      @module.description.should == :bob_is_cool!
+    end
+
+    it "overrides *args" do
+      @module.send(:define_action, :desc) do |*args|
+        [:return, :to, :me]
+      end
+
+      @module.with_handler.should_receive(:desc).with(:return, :to, :me)
+      @module.desc :a, :b
     end
   end
 
@@ -273,32 +229,11 @@ describe "Rainman::Driver" do
     end
   end
 
-  describe "#inject_handler_methods" do
-    before do
-      @bob = Class.new do
-        def self.name; 'Bob'; end
-      end
-      @module.const_set(:Bob, @bob)
-    end
-
-    it "extends Handler" do
-      @bob.should_receive(:extend).with(Rainman::Handler)
-      @module.send(:inject_handler_methods, @bob, :bob)
-    end
-
-    it "sets @handler_name class var" do
-      @module.send(:inject_handler_methods, @bob, :bob)
-      @bob.handler_name.should == :bob
-    end
-  end
-
   describe "#namespace" do
     def create_ns_class(name, base)
       klass = Class.new do
-        def hi; self.class.handler_name; end
+        def hi; self.class.to_s; end
         def bye; :nonono!; end
-        def self.handler_name; name; end
-        def self.validations; { :global => Rainman::Option.new(:global) }; end
       end
 
       set_const(base, name.to_s.camelize.to_sym, klass)
@@ -315,8 +250,8 @@ describe "Rainman::Driver" do
       create_ns_class :bob, @module::Abc
       create_ns_class :bob, @module::Xyz
 
-      @module.send(:register_handler, :abc)
-      @module.send(:register_handler, :xyz)
+      @module.send(:register_handler, :abc, :class_name => @module::Abc)
+      @module.send(:register_handler, :xyz, :class_name => @module::Xyz)
       @module.set_default_handler :abc
       @module.send(:namespace, :bob) do
         define_action :hi
@@ -329,12 +264,12 @@ describe "Rainman::Driver" do
         ivar = @module.instance_variable_get(:@bob)
         ivar.should be_a(Hash)
         ivar.should have_key(name)
-        ivar[name].should be_a(Module)
+        ivar[name].should be_a(Rainman::Runner)
       end
     end
 
     it "raises exception calling a method that isn't registered" do
-      expect { @module.bob.bye }.to raise_error(NoMethodError)
+      expect { @module.bob.bye }.to raise_error(Rainman::UnregisteredAction)
     end
 
     it "raises no exception calling a method that is registered" do
@@ -346,7 +281,7 @@ describe "Rainman::Driver" do
     end
 
     it "returns an anonymous Module" do
-      @module.bob.should be_a(Module)
+      @module.bob.should be_a(Rainman::Runner)
     end
 
     it "uses the right handler" do
