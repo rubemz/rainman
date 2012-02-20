@@ -165,6 +165,22 @@ describe "Rainman::Driver" do
     end
   end
 
+  describe "determine_handler_const" do
+    it "returns a constant in the current driver" do
+      @module.send(:determine_handler_const, 'bob').should == 'MissDaisy::Bob'
+    end
+
+    it "returns a constant in global namespace" do
+      @module.send(:determine_handler_const, 'Rainman').should == '::Rainman'
+    end
+
+    it "raises NameError when constant is not found" do
+      expect do
+        @module.send(:determine_handler_const, 'IamNotReal')
+      end.to raise_error /uninitialized constant "IamNotReal"/
+    end
+  end
+
   describe "#define_action" do
     before do
       @klass = Class.new do

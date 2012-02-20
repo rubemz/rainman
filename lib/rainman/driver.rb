@@ -157,7 +157,7 @@ module Rainman
     #
     # Returns the handler Class.
     def register_handler(name, opts = {}, &block)
-      klass = opts.delete(:class_name) || "::#{name.to_s.camelize}"
+      klass = opts.delete(:class_name) || determine_handler_const(name)
       create_handler_predicate_method name
       handlers[name] = Runner.new(name, klass.to_s.constantize, self, opts, &block)
     end
@@ -230,6 +230,29 @@ module Rainman
     def create_handler_predicate_method(handler_name)
       create_method "#{handler_name}?" do
         current_handler == handler_name
+      end
+    end
+
+    # Private: Determine where the given constant is.
+    #
+    # name - The name to check for as an underscored string.
+    #
+    # First, check that the constant is defined in the current driver's
+    # namespace. If it isn't, check if the constant is defined in the global
+    # namespace.
+    #
+    # Raises NameError if the constant cannot be found.
+    #
+    # Returns a String representing the constant name.
+    def determine_handler_const(name)
+      cname = name.to_s.camelize
+
+      if self.const_defined? cname
+        "#{self.name}::#{cname}"
+      elsif Kernel.const_defined? cname
+        "::#{cname}"
+      else
+        raise NameError, "uninitialized constant #{cname.inspect}"
       end
     end
 
