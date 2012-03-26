@@ -55,7 +55,7 @@ class String
       gsub(/([a-z\d])([A-Z])/,'\1_\2').
       tr("-", "_").
       downcase
-  end
+  end unless respond_to?(:underscore)
 end
 
 # From lib/active_support/core_ext/hash/reverse_merge.rb
